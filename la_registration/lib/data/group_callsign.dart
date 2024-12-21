@@ -24,4 +24,9 @@ enum GroupCallsigns {
       return null; // Если не найдено, возвращаем null
     }
   }
+
+// Метод для получения строки с названием группы
+  String getGroupCallsignAsString() {
+    return nameOfGroup; // Возвращаем название группы
+  }
 }

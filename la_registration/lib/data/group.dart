@@ -32,6 +32,7 @@ class Group {
   final GroupCallsigns groupCallsign; // Используем enum GroupCallsigns
   final String archived;
   final List<Volunteer>? searchers; // Добавляем поле для поиска волонтёров
+  final String elderPhoneNumber;
 
   Group({
     required this.id,
@@ -49,6 +50,7 @@ class Group {
     required this.groupCallsign, // Теперь принимаем enum GroupCallsigns
     this.archived = 'false',
     this.searchers, // Опциональный параметр для поиска волонтёров
+    this.elderPhoneNumber = '',
   });
 
   String get details {

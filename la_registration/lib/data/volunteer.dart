@@ -14,7 +14,7 @@ class Volunteer {
   final String isSent;
   String status;
   final String notifyThatLeft;
-  final String timeForSearch;
+  String timeForSearch;
   final int? groupId;
 
   Volunteer({
