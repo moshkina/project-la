@@ -32,6 +32,7 @@ class AddNewGroupScreenState extends State<AddNewGroupScreen> {
   @override
   void initState() {
     super.initState();
+
     elderController = TextEditingController();
     searcherController = TextEditingController();
 
@@ -58,7 +59,7 @@ class AddNewGroupScreenState extends State<AddNewGroupScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Error loading group data")),
+          const SnackBar(content: Text("Ошибка загрузки данных группы")),
         );
       }
     }
@@ -68,7 +69,7 @@ class AddNewGroupScreenState extends State<AddNewGroupScreen> {
     if (elder == null || searchersList.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Please select an elder and at least one searcher."),
+          content: Text("Выберите старшего и хотя бы одного поисковика."),
         ),
       );
       return;
@@ -102,23 +103,23 @@ class AddNewGroupScreenState extends State<AddNewGroupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add New Group')),
+      appBar: AppBar(title: const Text('Добавить группу')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             TextField(
               controller: elderController,
-              decoration: const InputDecoration(labelText: "Elder"),
+              decoration: const InputDecoration(labelText: "Старший"),
             ),
             TextField(
               controller: searcherController,
-              decoration: const InputDecoration(labelText: "Searcher"),
+              decoration: const InputDecoration(labelText: "Поисковик"),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _saveGroup,
-              child: const Text('Save Group'),
+              child: const Text('Сохранить группу'),
             ),
           ],
         ),

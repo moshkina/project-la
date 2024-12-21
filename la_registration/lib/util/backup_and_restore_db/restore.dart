@@ -16,58 +16,58 @@ class Restore {
     return sb.toString();
   }
 }
+  // Вложенный класс для инициализации восстановления
+  class Init {
+    dynamic database; // Указываем тип dynamic
+    OnWorkFinishListener? onWorkFinishListener;
 
-// Вложенный класс для инициализации восстановления
-class Init {
-  dynamic database; // Указываем тип dynamic
-  OnWorkFinishListener? onWorkFinishListener;
+    // Установка базы данных
+    Init setDatabase(dynamic database) {
+      this.database = database;
+      return this;
+    }
 
-  // Установка базы данных (переименовали метод для устранения конфликта имен)
-  Init setDatabase(dynamic database) {
-    this.database = database;
-    return this;
-  }
+    // Установка слушателя завершения работы
+    Init setOnWorkFinishListener(OnWorkFinishListener? listener) {
+      onWorkFinishListener = listener;
+      return this;
+    }
 
-  // Установка слушателя завершения работы (переименовали метод)
-  Init setOnWorkFinishListener(OnWorkFinishListener? listener) {
-    onWorkFinishListener = listener;
-    return this;
-  }
-
-  // Выполнение восстановления данных
-  Future<void> execute(Stream<List<int>> inputStream) async {
-    try {
-      if (database == null) {
-        onWorkFinishListener?.onFinished(false, "База данных не указана");
-        return;
-      }
-
-      // Используем метод convertStreamToString из родительского класса Restore
-      final restore = Restore();
-      final data = restore.convertStreamToString(inputStream);
-      final jsonDB = jsonDecode(data);
-
-      for (var table in jsonDB.keys) {
-        // Очистка таблицы (замените на вашу логику)
-        await database.query("DELETE FROM $table");
-
-        // Вставка новых данных
-        var tableData = jsonDB[table];
-        for (var row in tableData) {
-          var columns = row.keys.toList();
-          var values = columns.map((column) => row[column]).toList();
-
-          String query =
-              "INSERT INTO $table (${columns.join(', ')}) VALUES (${values.map((value) => value == null ? 'NULL' : "'$value'").join(', ')})";
-
-          // Выполнение запроса на вставку данных
-          await database.query(query);
+    // Выполнение восстановления данных
+    Future<void> execute(Stream<List<int>> inputStream) async {
+      try {
+        if (database == null) {
+          onWorkFinishListener?.onFinished(false, "База данных не указана");
+          return;
         }
-      }
 
-      onWorkFinishListener?.onFinished(true, "Успешно");
-    } catch (e) {
-      onWorkFinishListener?.onFinished(false, e.toString());
+        // Используем метод convertStreamToString из родительского класса Restore
+        final restore = Restore();
+        final data = restore.convertStreamToString(inputStream);
+        final jsonDB = jsonDecode(data);
+
+        for (var table in jsonDB.keys) {
+          // Очистка таблицы
+          await database.query("DELETE FROM $table");
+
+          // Вставка новых данных
+          var tableData = jsonDB[table];
+          for (var row in tableData) {
+            var columns = row.keys.toList();
+            var values = columns.map((column) => row[column]).toList();
+
+            String query =
+                "INSERT INTO $table (${columns.join(', ')}) VALUES (${values.map((value) => value == null ? 'NULL' : "'$value'").join(', ')})";
+
+            // Выполнение запроса на вставку данных
+            await database.query(query);
+          }
+        }
+
+        onWorkFinishListener?.onFinished(true, "Успешно");
+      } catch (e) {
+        onWorkFinishListener?.onFinished(false, e.toString());
+      }
     }
   }
-}
+

@@ -13,11 +13,11 @@ class GroupTabsScreen extends StatelessWidget {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Groups ($groupCallsign)'),
+          title: Text('Группы ($groupCallsign)'),
           bottom: const TabBar(
             tabs: [
-              Tab(text: 'Active'),
-              Tab(text: 'Archived'),
+              Tab(text: 'Активные'),
+              Tab(text: 'Архив'),
             ],
           ),
         ),

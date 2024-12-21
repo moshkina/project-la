@@ -1,14 +1,14 @@
 enum GroupCallsigns {
-  bort("Bort"),
-  kinolog("Kinolog"),
-  veter("Veter"),
-  voda("Voda"),
-  pegas("Pegas"),
-  police("Police"),
-  mchs("Mchs"),
-  pso("Pso"),
-  lisa("Lisa"),
-  autonome("Autonome");
+  bort("Борт"),
+  kinolog("Кинолог"),
+  veter("Ветер"),
+  voda("Вода"),
+  pegas("Пегас"),
+  police("Полиция"),
+  mchs("МЧС"),
+  pso("ПСО"),
+  lisa("Лиса"),
+  autonome("Автоном");
 
   final String nameOfGroup;
 
@@ -25,7 +25,7 @@ enum GroupCallsigns {
     }
   }
 
-// Метод для получения строки с названием группы
+  // Метод для получения строки с названием группы
   String getGroupCallsignAsString() {
     return nameOfGroup; // Возвращаем название группы
   }
