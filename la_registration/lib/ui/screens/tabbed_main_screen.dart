@@ -13,57 +13,29 @@ class TabbedMainScreen extends StatefulWidget {
   TabbedMainScreenState createState() => TabbedMainScreenState();
 }
 
-class TabbedMainScreenState extends State<TabbedMainScreen> {
-  String searchName = ''; // Переменная для хранения имени для поиска
-  late GroupsViewModel groupsViewModel;
+class TabbedMainScreenState extends State<TabbedMainScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    groupsViewModel = Provider.of<GroupsViewModel>(context);
-  }
-
-  // Метод для отображения диалогового окна поиска
-  void _showSearchDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        TextEditingController controller =
-            TextEditingController(text: searchName);
-        return AlertDialog(
-          title: const Text('Поиск групп'),
-          content: TextField(
-            controller: controller,
-            decoration:
-                const InputDecoration(labelText: 'Введите название группы'),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  searchName = controller.text;
-                });
-                Navigator.of(context).pop();
-              },
-              child: const Text('Поиск'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Отмена'),
-            ),
-          ],
-        );
-      },
-    );
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Главный экран'),
+        title: const Text('Волонтёры'),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'Новые'),
+            Tab(text: 'Отправленные'),
+            Tab(text: 'Все'),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
@@ -123,31 +95,86 @@ class TabbedMainScreenState extends State<TabbedMainScreen> {
           ],
         ),
       ),
-      body: Consumer<GroupsViewModel>(
-        builder: (context, groupsViewModel, child) {
-          return ListView.builder(
-            itemCount: groupsViewModel.groups.length,
-            itemBuilder: (context, index) {
-              final group = groupsViewModel.groups[index];
-              return ListTile(
-                title: Text(group.numberOfGroup.toString()),
-                subtitle: Text(group.details),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => GroupTabsScreen(
-                        groupCallsign:
-                            group.groupCallsign.getGroupCallsignAsString(),
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildVolunteersList(context, 'Новые'),
+          _buildVolunteersList(context, 'Отправленные'),
+          _buildVolunteersList(context, 'Все'),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  const AddManuallyScreen(volunteerId: 0, size: '5'),
+            ),
           );
         },
+        child: const Icon(Icons.add),
       ),
+    );
+  }
+
+  Widget _buildVolunteersList(BuildContext context, String tabName) {
+    return Consumer<GroupsViewModel>(
+      builder: (context, groupsViewModel, child) {
+        final volunteers = groupsViewModel.groups;
+        if (volunteers.isEmpty) {
+          return Center(
+            child: Text('Нет данных для вкладки $tabName'),
+          );
+        }
+
+        return ListView.builder(
+          itemCount: volunteers.length,
+          itemBuilder: (context, index) {
+            final volunteer = volunteers[index];
+            return ListTile(
+              title: Text(volunteer.numberOfGroup.toString()),
+              subtitle: Text(volunteer.details),
+              onTap: () {
+                // Обработка нажатия на волонтёра
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // Метод для отображения диалогового окна поиска
+  void _showSearchDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        TextEditingController controller = TextEditingController();
+        return AlertDialog(
+          title: const Text('Поиск групп'),
+          content: TextField(
+            controller: controller,
+            decoration:
+                const InputDecoration(labelText: 'Введите название группы'),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Отмена'),
+            ),
+            TextButton(
+              onPressed: () {
+                // Добавить логику поиска
+                Navigator.of(context).pop();
+              },
+              child: const Text('Поиск'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
