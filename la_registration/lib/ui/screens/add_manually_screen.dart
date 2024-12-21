@@ -4,7 +4,7 @@ import 'package:la_registration/listeners/volunteers_viewmodel.dart';
 
 class AddManuallyScreen extends StatefulWidget {
   final int volunteerId;
-  final String size; // Убедитесь, что size имеет правильный тип
+  final String size;
 
   const AddManuallyScreen(
       {super.key, required this.volunteerId, required this.size});

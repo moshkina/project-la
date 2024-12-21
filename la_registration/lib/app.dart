@@ -3,7 +3,7 @@ import 'ui/screens/tabbed_main_screen.dart';
 import 'ui/screens/counter_screen.dart';
 import 'ui/screens/add_group_screen.dart';
 import 'ui/screens/group_detail_screen.dart';
-import '../data/group_callsign.dart'; // Импортировать для использования enum
+import '../data/group_callsign.dart'; // Импорт для использования enum
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
         '/add_group': (context) => const AddNewGroupScreen(
               groupId: 0,
               groupCallsign:
-                  GroupCallsigns.bort, // Используем одно из значений enum
+                  GroupCallsigns.bort, 
               isGroupEdit: false,
             ),
         '/group_details': (context) => const GroupDetailScreen(
