@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:la_registration/listeners/groups_viewmodel.dart';
 import 'package:la_registration/data/group_callsign.dart';
 import 'package:la_registration/ui/screens/group_tabs_screen.dart';
-import 'package:la_registration/ui/screens/add_group_screen.dart';
 import 'package:la_registration/ui/screens/barcode_scanner_screen.dart';
 import 'package:la_registration/ui/screens/add_manually_screen.dart';
 
@@ -82,55 +81,20 @@ class TabbedMainScreenState extends State<TabbedMainScreen> {
                 style: TextStyle(color: Colors.white, fontSize: 24),
               ),
             ),
-            // Итерация через все типы групп и отображение их с опциями
+            // Итерация через все типы групп
             ...GroupCallsigns.values.map((groupCallsign) {
-              return ExpansionTile(
+              return ListTile(
                 title: Text(groupCallsign.getGroupCallsignAsString()),
-                children: [
-                  ListTile(
-                    title: const Text('Просмотр активных групп'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => GroupTabsScreen(
-                            groupCallsign:
-                                groupCallsign.getGroupCallsignAsString(),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  ListTile(
-                    title: const Text('Просмотр архивных групп'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => GroupTabsScreen(
-                            groupCallsign:
-                                groupCallsign.getGroupCallsignAsString(),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  ListTile(
-                    title: const Text('Создать новую группу'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AddNewGroupScreen(
-                            groupId: 0,
-                            groupCallsign: groupCallsign,
-                            isGroupEdit: false,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => GroupTabsScreen(
+                        groupCallsign: groupCallsign.getGroupCallsignAsString(),
+                      ),
+                    ),
+                  );
+                },
               );
             }),
             ListTile(
@@ -173,8 +137,8 @@ class TabbedMainScreenState extends State<TabbedMainScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => GroupTabsScreen(
-                        groupCallsign: group.groupCallsign
-                            .getGroupCallsignAsString(), // Исправлено на русский
+                        groupCallsign:
+                            group.groupCallsign.getGroupCallsignAsString(),
                       ),
                     ),
                   );
