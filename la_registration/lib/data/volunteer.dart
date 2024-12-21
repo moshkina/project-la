@@ -1,40 +1,76 @@
 import 'package:floor/floor.dart';
-import 'package:json_annotation/json_annotation.dart';
 
-part 'volunteer.g.dart'; // Для генерации кода с помощью json_serializable
-
-@Entity(tableName: 'volunteers')
-@JsonSerializable()
+@Entity(tableName: "volunteers")
 class Volunteer {
   @PrimaryKey(autoGenerate: true)
-  final int uniqueId; // Уникальный идентификатор для волонтера
+  final int uniqueId;
+  final int index;
+  final String fullName;
+  final String callSign;
+  final String nickName;
+  final String region;
+  final String phoneNumber;
+  final String car;
+  final String isSent;
+  String status;
+  final String notifyThatLeft;
+  final String timeForSearch;
+  final int? groupId;
 
-  final String fullName; // Полное имя волонтера
-  final String phoneNumber; // Номер телефона
-  final String callSign; // Позывной
-  final String nickName; // Псевдоним
-  final String region; // Регион
-  final String car; // Машина
-  String status; // Статус
-  final int size; // Размер одежды
-
-  // Конструктор
   Volunteer({
     required this.uniqueId,
+    required this.index,
     required this.fullName,
-    required this.phoneNumber,
     this.callSign = "",
     this.nickName = "",
     this.region = "",
+    required this.phoneNumber,
     this.car = "",
-    this.status = "Active",
-    required this.size,
+    this.isSent = "false",
+    required this.status,
+    this.notifyThatLeft = "false",
+    this.timeForSearch = "",
+    this.groupId,
   });
 
-  // Фабрика для десериализации
-  factory Volunteer.fromJson(Map<String, dynamic> json) =>
-      _$VolunteerFromJson(json);
+  @override
+  String toString() => "$fullName ($callSign)";
 
-  // Метод для сериализации
-  Map<String, dynamic> toJson() => _$VolunteerToJson(this);
+  // Преобразование объекта Volunteer в JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'uniqueId': uniqueId,
+      'index': index,
+      'fullName': fullName,
+      'callSign': callSign,
+      'nickName': nickName,
+      'region': region,
+      'phoneNumber': phoneNumber,
+      'car': car,
+      'isSent': isSent,
+      'status': status,
+      'notifyThatLeft': notifyThatLeft,
+      'timeForSearch': timeForSearch,
+      'groupId': groupId,
+    };
+  }
+
+  // Преобразование JSON в объект Volunteer
+  factory Volunteer.fromJson(Map<String, dynamic> json) {
+    return Volunteer(
+      uniqueId: json['uniqueId'] as int,
+      index: json['index'] as int,
+      fullName: json['fullName'] as String,
+      callSign: json['callSign'] as String? ?? '',
+      nickName: json['nickName'] as String? ?? '',
+      region: json['region'] as String? ?? '',
+      phoneNumber: json['phoneNumber'] as String,
+      car: json['car'] as String? ?? '',
+      isSent: json['isSent'] as String? ?? 'false',
+      status: json['status'] as String,
+      notifyThatLeft: json['notifyThatLeft'] as String? ?? 'false',
+      timeForSearch: json['timeForSearch'] as String? ?? '',
+      groupId: json['groupId'] as int?,
+    );
+  }
 }

@@ -93,7 +93,7 @@ class TabbedMainScreenState extends State<TabbedMainScreen> {
                   MaterialPageRoute(
                     builder: (context) => const AddManuallyScreen(
                       volunteerId: 0,
-                      size: 5,
+                      size: '5', // Передаем size как строку
                     ),
                   ),
                 );

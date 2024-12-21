@@ -59,7 +59,23 @@ class VolunteerDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Group Size: ${volunteer.size}', // Используем поле size
+              'Group Size: ${volunteer.index}', // Заменили size на index
+              style: const TextStyle(fontSize: 16),
+            ),
+            // Если необходимо, вы можете также добавить другие новые поля:
+            const SizedBox(height: 8),
+            Text(
+              'Sent Status: ${volunteer.isSent}',
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Notify That Left: ${volunteer.notifyThatLeft}',
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Time for Search: ${volunteer.timeForSearch.isNotEmpty ? volunteer.timeForSearch : "Not specified"}',
               style: const TextStyle(fontSize: 16),
             ),
           ],

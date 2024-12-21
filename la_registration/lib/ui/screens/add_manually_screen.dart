@@ -4,7 +4,7 @@ import 'package:la_registration/listeners/volunteers_viewmodel.dart';
 
 class AddManuallyScreen extends StatefulWidget {
   final int volunteerId;
-  final int size;
+  final String size; // Убедитесь, что size имеет правильный тип
 
   const AddManuallyScreen(
       {super.key, required this.volunteerId, required this.size});
@@ -64,30 +64,35 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
           const SnackBar(content: Text("Please fill in the required fields.")));
     } else if (isEdited) {
       volunteer = Volunteer(
-        uniqueId: volunteer.uniqueId, // Keep the existing uniqueId
-        fullName: fullName,
-        phoneNumber: phoneNumber,
-        callSign: callSign,
-        nickName: nickName,
-        region: region,
-        car: car,
-        status: volunteer.status,
-        size: volunteer.size,
-      );
+          uniqueId: volunteer.uniqueId, // Keep the existing uniqueId
+          index: volunteer.index, // Передаем индекс
+          fullName: fullName,
+          phoneNumber: phoneNumber,
+          callSign: callSign,
+          nickName: nickName,
+          region: region,
+          car: car,
+          status: volunteer.status,
+          notifyThatLeft: volunteer.notifyThatLeft,
+          timeForSearch: volunteer.timeForSearch,
+          groupId: volunteer.groupId);
       _viewModel.updateVolunteer(volunteer);
       Navigator.pop(context);
     } else {
       Volunteer newVolunteer = Volunteer(
-        uniqueId: 0,
-        size: widget.size,
-        fullName: fullName,
-        phoneNumber: phoneNumber,
-        callSign: callSign,
-        nickName: nickName,
-        region: region,
-        car: car,
-        status: "Active",
-      );
+          uniqueId: 0,
+          index: 0, // Убедитесь, что _index передается
+          fullName: fullName,
+          phoneNumber: phoneNumber,
+          callSign: callSign,
+          nickName: nickName,
+          region: region,
+          car: car,
+          status: "Active",
+          notifyThatLeft: "false",
+          timeForSearch: "", // Задайте нужные значения по умолчанию
+          groupId: null // Если нужно, передайте значение groupId
+          );
       _viewModel.insertVolunteer(newVolunteer);
       Navigator.pop(context);
     }

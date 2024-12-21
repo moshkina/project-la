@@ -79,16 +79,21 @@ class BarCodeScannerScreenState extends State<BarCodeScannerScreen> {
       String fullName = scanResultArray[0];
       String phoneNumber = scanResultArray[scanResultArray.length - 1];
 
+      // Создание нового объекта Volunteer с обязательными полями
       final volunteer = Volunteer(
         uniqueId: DateTime.now().millisecondsSinceEpoch, // Уникальный ID
+        index: 0, // Используем значение по умолчанию для index
         fullName: fullName,
         phoneNumber: phoneNumber,
         callSign: "Default",
         nickName: "Default",
         region: "Unknown",
         car: "None",
-        status: "Active",
-        size: 0,
+        status: "Active", // Статус по умолчанию
+        isSent: "false", // Значение по умолчанию
+        notifyThatLeft: "false", // Значение по умолчанию
+        timeForSearch: "", // Значение по умолчанию
+        groupId: null, // Если нужно, передайте сюда ID группы или оставьте null
       );
 
       context.read<VolunteersViewModel>().insertVolunteer(volunteer);

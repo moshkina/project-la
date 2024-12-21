@@ -45,3 +45,43 @@ class Converter {
         .firstWhere((e) => e.nameOfGroup == groupAsString);
   }
 }
+
+extension VolunteerJson on Volunteer {
+  // Преобразование объекта Volunteer в JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'uniqueId': uniqueId,
+      'index': index,
+      'fullName': fullName,
+      'callSign': callSign,
+      'nickName': nickName,
+      'region': region,
+      'phoneNumber': phoneNumber,
+      'car': car,
+      'isSent': isSent,
+      'status': status,
+      'notifyThatLeft': notifyThatLeft,
+      'timeForSearch': timeForSearch,
+      'groupId': groupId,
+    };
+  }
+
+  // Преобразование JSON в объект Volunteer
+  fromJson(Map<String, dynamic> json) {
+    return Volunteer(
+      uniqueId: json['uniqueId'] as int,
+      index: json['index'] as int,
+      fullName: json['fullName'] as String,
+      callSign: json['callSign'] as String? ?? '',
+      nickName: json['nickName'] as String? ?? '',
+      region: json['region'] as String? ?? '',
+      phoneNumber: json['phoneNumber'] as String,
+      car: json['car'] as String? ?? '',
+      isSent: json['isSent'] as String? ?? 'false',
+      status: json['status'] as String,
+      notifyThatLeft: json['notifyThatLeft'] as String? ?? 'false',
+      timeForSearch: json['timeForSearch'] as String? ?? '',
+      groupId: json['groupId'] as int?,
+    );
+  }
+}
