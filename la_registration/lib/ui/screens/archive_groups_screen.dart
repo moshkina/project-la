@@ -14,9 +14,7 @@ class ArchiveGroupsScreen extends StatelessWidget {
     final groupsViewModel = context.watch<GroupsViewModel>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Archived Groups ($groupCallsign)'),
-      ),
+      backgroundColor: Colors.black, // Чёрный фон для страницы
       body: FutureBuilder<List<Group>>(
         future: groupsViewModel.getArchivedGroups(groupCallsign),
         builder: (context, snapshot) {
@@ -38,3 +36,4 @@ class ArchiveGroupsScreen extends StatelessWidget {
     );
   }
 }
+

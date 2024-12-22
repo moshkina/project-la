@@ -103,23 +103,54 @@ class AddNewGroupScreenState extends State<AddNewGroupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Добавить группу')),
+      appBar: AppBar(
+        title: const Text('Добавить группу',
+            style: TextStyle(
+                color: Colors.white)), // Белый текст на оранжевом фоне
+        backgroundColor: const Color(0xFFF96800), // Оранжевый фон для заголовка
+      ),
+      backgroundColor: Colors.black, // Чёрный фон для всего экрана
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             TextField(
               controller: elderController,
-              decoration: const InputDecoration(labelText: "Старший"),
+              decoration: const InputDecoration(
+                labelText: "Старший",
+                labelStyle:
+                    TextStyle(color: Colors.white), // Белый цвет для текста
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(
+                      color: Colors.white), // Белая линия под текстом
+                ),
+              ),
+              style: const TextStyle(color: Colors.white), // Белый текст
             ),
+            const SizedBox(height: 20),
             TextField(
               controller: searcherController,
-              decoration: const InputDecoration(labelText: "Поисковик"),
+              decoration: const InputDecoration(
+                labelText: "Поисковик",
+                labelStyle:
+                    TextStyle(color: Colors.white), // Белый цвет для текста
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(
+                      color: Colors.white), // Белая линия под текстом
+                ),
+              ),
+              style: const TextStyle(color: Colors.white), // Белый текст
             ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _saveGroup,
-              child: const Text('Сохранить группу'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF96800), // Оранжевая кнопка
+              ),
+              child: const Text(
+                'Сохранить группу',
+                style: TextStyle(color: Colors.white), // Белый текст на кнопке
+              ),
             ),
           ],
         ),

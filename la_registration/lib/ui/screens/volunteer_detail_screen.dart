@@ -59,10 +59,9 @@ class VolunteerDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Group Size: ${volunteer.index}', // Заменили size на index
+              'Group Size: ${volunteer.index}',
               style: const TextStyle(fontSize: 16),
             ),
-            // Если необходимо, вы можете также добавить другие новые поля:
             const SizedBox(height: 8),
             Text(
               'Sent Status: ${volunteer.isSent}',

@@ -14,9 +14,7 @@ class ActiveGroupsScreen extends StatelessWidget {
     final groupsViewModel = context.watch<GroupsViewModel>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Active Groups ($groupCallsign)'),
-      ),
+      backgroundColor: Colors.black, // Чёрный фон для страницы
       body: FutureBuilder<List<Group>>(
         future: groupsViewModel.getActiveGroups(groupCallsign),
         builder: (context, snapshot) {
@@ -39,7 +37,12 @@ class ActiveGroupsScreen extends StatelessWidget {
         onPressed: () {
           Navigator.pushNamed(context, '/add_group', arguments: groupCallsign);
         },
-        child: const Icon(Icons.add),
+        backgroundColor: const Color(0xFFF96800), // Оранжевая кнопка
+        shape: const CircleBorder(), // Круглая форма кнопки
+        child: const Icon(
+          Icons.add,
+          color: Colors.white, // Белый плюс
+        ),
       ),
     );
   }

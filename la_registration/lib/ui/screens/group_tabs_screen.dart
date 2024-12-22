@@ -13,8 +13,20 @@ class GroupTabsScreen extends StatelessWidget {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Группы ($groupCallsign)'),
+          title: Text(
+            'Группы ($groupCallsign)',
+            style:
+                const TextStyle(color: Colors.white), // Белый текст заголовка
+          ),
+          backgroundColor: const Color(0xFFF96800), // Оранжевый фон для appBar
           bottom: const TabBar(
+            labelColor: Colors.white, // Белый текст на активной вкладке
+            unselectedLabelColor:
+                Colors.white, // Белый текст на неактивной вкладке
+            indicatorColor: Colors.white, // Белый ползунок между вкладками
+            labelStyle: TextStyle(
+              fontWeight: FontWeight.bold, // Жирный текст на активной вкладке
+            ),
             tabs: [
               Tab(text: 'Активные'),
               Tab(text: 'Архив'),

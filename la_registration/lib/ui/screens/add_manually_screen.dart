@@ -60,8 +60,8 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
     String car = carController.text.trim();
 
     if (fullName.isEmpty || phoneNumber.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Please fill in the required fields.")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Пожалуйста, заполните обязательные поля.")));
     } else if (isEdited) {
       volunteer = Volunteer(
           uniqueId: volunteer.uniqueId, // Keep the existing uniqueId
@@ -101,33 +101,130 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Manually')),
+      appBar: AppBar(
+        title: const Text(
+          'Добавить вручную',
+          style: TextStyle(color: Colors.white), // Белый текст
+        ),
+        backgroundColor: const Color(0xFFF96800), // Оранжевый фон
+      ),
+      backgroundColor: Colors.black, // Чёрный фон для всего экрана
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             TextField(
-                controller: fullNameController,
-                decoration: const InputDecoration(labelText: "Full Name")),
+              controller: fullNameController,
+              decoration: const InputDecoration(
+                labelText: "Полное имя",
+                labelStyle: TextStyle(color: Colors.white), // Белый текст
+                hintText: "Введите полное имя",
+                hintStyle:
+                    TextStyle(color: Colors.grey), // Прозрачные подсказки
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), // Белая рамка
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), // Белая рамка
+                ),
+              ),
+              style: const TextStyle(color: Colors.white), // Белый текст
+            ),
             TextField(
-                controller: callSignController,
-                decoration: const InputDecoration(labelText: "Call Sign")),
+              controller: callSignController,
+              decoration: const InputDecoration(
+                labelText: "Позывной",
+                labelStyle: TextStyle(color: Colors.white), // Белый текст
+                hintText: "Введите позывной",
+                hintStyle:
+                    TextStyle(color: Colors.grey), // Прозрачные подсказки
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), // Белая рамка
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), // Белая рамка
+                ),
+              ),
+              style: const TextStyle(color: Colors.white), // Белый текст
+            ),
             TextField(
-                controller: forumNicknameController,
-                decoration: const InputDecoration(labelText: "Forum Nickname")),
+              controller: forumNicknameController,
+              decoration: const InputDecoration(
+                labelText: "Ник на форуме",
+                labelStyle: TextStyle(color: Colors.white), // Белый текст
+                hintText: "Введите ник на форуме",
+                hintStyle:
+                    TextStyle(color: Colors.grey), // Прозрачные подсказки
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), // Белая рамка
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), // Белая рамка
+                ),
+              ),
+              style: const TextStyle(color: Colors.white), // Белый текст
+            ),
             TextField(
-                controller: regionController,
-                decoration: const InputDecoration(labelText: "Region")),
+              controller: regionController,
+              decoration: const InputDecoration(
+                labelText: "Регион",
+                labelStyle: TextStyle(color: Colors.white), // Белый текст
+                hintText: "Введите регион",
+                hintStyle:
+                    TextStyle(color: Colors.grey), // Прозрачные подсказки
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), // Белая рамка
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), // Белая рамка
+                ),
+              ),
+              style: const TextStyle(color: Colors.white), // Белый текст
+            ),
             TextField(
-                controller: phoneNumberController,
-                decoration: const InputDecoration(labelText: "Phone Number")),
+              controller: phoneNumberController,
+              decoration: const InputDecoration(
+                labelText: "Телефон",
+                labelStyle: TextStyle(color: Colors.white), // Белый текст
+                hintText: "Введите номер телефона",
+                hintStyle:
+                    TextStyle(color: Colors.grey), // Прозрачные подсказки
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), // Белая рамка
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), // Белая рамка
+                ),
+              ),
+              style: const TextStyle(color: Colors.white), // Белый текст
+            ),
             TextField(
-                controller: carController,
-                decoration: const InputDecoration(labelText: "Car")),
+              controller: carController,
+              decoration: const InputDecoration(
+                labelText: "Машина",
+                labelStyle: TextStyle(color: Colors.white), // Белый текст
+                hintText: "Введите гос.номер",
+                hintStyle:
+                    TextStyle(color: Colors.grey), // Прозрачные подсказки
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), // Белая рамка
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), // Белая рамка
+                ),
+              ),
+              style: const TextStyle(color: Colors.white), // Белый текст
+            ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _saveData,
-              child: Text(isEdited ? 'Save Changes' : 'Save'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF96800),
+              ),
+              child: Text(
+                isEdited ? 'Сохранить изменения' : 'Сохранить',
+                style: const TextStyle(color: Colors.white), // Белый текст
+              ),
             ),
           ],
         ),
