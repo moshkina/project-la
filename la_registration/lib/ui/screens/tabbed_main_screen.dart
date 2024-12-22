@@ -40,12 +40,12 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
                   border: InputBorder.none,
                 ),
                 onChanged: (value) {
-                  // Добавьте логику для фильтрации списка
+                  // Add logic for filtering the list
                 },
               )
             : const Text(
                 'Волонтёры',
-                style: TextStyle(color: Colors.white), // Текст заголовка белый
+                style: TextStyle(color: Colors.white),
               ),
         bottom: TabBar(
           controller: _tabController,
@@ -66,9 +66,9 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
           IconButton(
             icon: Icon(
               _isSearchActive ? Icons.close : Icons.search,
-              color: Colors.white, // Белый цвет значка поиска
+              color: Colors.white,
             ),
-            onPressed: _showSearchDialog,
+            onPressed: _toggleSearch,
           ),
         ],
         backgroundColor: const Color(0xFFF96800),
@@ -84,13 +84,12 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
         child: TabBarView(
           controller: _tabController,
           children: [
-            _buildVolunteersList(context, 'Новые'),
-            _buildVolunteersList(context, 'Отправленные'),
-            _buildVolunteersList(context, 'Все'),
+            _buildNewVolunteersTab(),
+            _buildSentVolunteersTab(),
+            _buildAllVolunteersTab(),
           ],
         ),
       ),
-      floatingActionButton: _buildSpeedDial(),
     );
   }
 
@@ -135,8 +134,8 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
                 child: Text(
                   'Группы',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
+                    color: Color.fromARGB(255, 188, 188, 188),
+                    fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -168,8 +167,8 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
                 child: Text(
                   'База данных',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
+                    color: Color.fromARGB(255, 188, 188, 188),
+                    fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -181,7 +180,7 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
                 style: TextStyle(color: Colors.white),
               ),
               onTap: () {
-                // Логика для сохранения и пересылки базы данных
+                // Save and send data logic
               },
             ),
             ListTile(
@@ -190,7 +189,7 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
                 style: TextStyle(color: Colors.white),
               ),
               onTap: () {
-                // Логика для загрузки базы данных
+                // Load database logic
               },
             ),
           ],
@@ -199,56 +198,100 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
     );
   }
 
-  Widget _buildSpeedDial() {
-    return SpeedDial(
-      icon: Icons.add,
-      activeIcon: Icons.close,
-      backgroundColor: const Color(0xFFF96800),
+  Widget _buildNewVolunteersTab() {
+    return Stack(
       children: [
-        SpeedDialChild(
-          child: const Icon(Icons.edit, color: Colors.white),
-          label: 'Добавить вручную',
-          backgroundColor: const Color(0xFFF96800),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    const AddManuallyScreen(volunteerId: 0, size: '5'),
+        _buildVolunteersList(context, 'Новые'),
+        Positioned(
+          bottom: 16,
+          right: 16,
+          child: SpeedDial(
+            icon: Icons.add,
+            activeIcon: Icons.close,
+            backgroundColor: const Color(0xFFF96800),
+            children: [
+              SpeedDialChild(
+                child: const Icon(Icons.edit, color: Colors.white),
+                label: 'Добавить вручную',
+                backgroundColor: const Color(0xFFF96800),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          const AddManuallyScreen(volunteerId: 0, size: '5'),
+                    ),
+                  );
+                },
               ),
-            );
-          },
-        ),
-        SpeedDialChild(
-          child: const Icon(Icons.qr_code_scanner, color: Colors.white),
-          label: 'Добавить с помощью QRScanner',
-          backgroundColor: const Color(0xFFF96800),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const BarCodeScannerScreen(),
+              SpeedDialChild(
+                child: const Icon(Icons.qr_code_scanner, color: Colors.white),
+                label: 'Добавить с помощью QRScanner',
+                backgroundColor: const Color(0xFFF96800),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const BarCodeScannerScreen(),
+                    ),
+                  );
+                },
               ),
-            );
-          },
-        ),
-        SpeedDialChild(
-          child: const Icon(Icons.send, color: Colors.white),
-          label: 'Отправить новые инфоргу',
-          backgroundColor: const Color(0xFFF96800),
-          onTap: () {
-            // Логика отправки новых данных
-          },
+              SpeedDialChild(
+                child: const Icon(Icons.send, color: Colors.white),
+                label: 'Отправить новые инфоргу',
+                backgroundColor: const Color(0xFFF96800),
+                onTap: () {
+                  // Logic to send data
+                },
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  void _showSearchDialog() {
+  Widget _buildSentVolunteersTab() {
+    return Stack(
+      children: [
+        _buildVolunteersList(context, 'Отправленные'),
+        Positioned(
+          bottom: 16,
+          right: 16,
+          child: FloatingActionButton.extended(
+            onPressed: _showSendConfirmationDialog,
+            backgroundColor: const Color(0xFFF96800),
+            icon: const Icon(Icons.send),
+            label: const Text('Отправить инфоргу тех кто уехал'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAllVolunteersTab() {
+    return Stack(
+      children: [
+        _buildVolunteersList(context, 'Все'),
+        Positioned(
+          bottom: 16,
+          right: 16,
+          child: FloatingActionButton(
+            onPressed: _showDeleteConfirmationDialog,
+            backgroundColor: const Color(0xFFF96800),
+            child: const Icon(Icons.delete),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _toggleSearch() {
     setState(() {
       _isSearchActive = !_isSearchActive;
       if (!_isSearchActive) {
-        _searchController.clear(); // Очистить строку поиска при закрытии
+        _searchController.clear(); // Clear search field when closing
       }
     });
   }
@@ -307,15 +350,89 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
     );
   }
 
+  void _showSendConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF303030),
+          title: const Text(
+            'Подтвердите отправку инфоргу',
+            style: TextStyle(color: Colors.white),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text(
+                'Отмена',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                // Send confirmation logic
+                Navigator.pop(context);
+              },
+              child: const Text(
+                'Отправить',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDeleteConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF303030),
+          title: const Text(
+            'Предупреждение',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: const Text(
+            'Подтвердите удаление всех записей',
+            style: TextStyle(color: Colors.white),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text(
+                'Отмена',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                // Logic for deleting all entries
+                Navigator.pop(context);
+              },
+              child: const Text(
+                'Удалить',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildVolunteersList(BuildContext context, String tabName) {
     return Consumer<GroupsViewModel>(
-        builder: (context, groupsViewModel, child) {
-      final volunteers = groupsViewModel.groups;
-      if (volunteers.isEmpty) {
-        return Container(); // Убираем сообщение "Нет данных"
-      }
-
-      if (tabName == 'Новые') {
+      builder: (context, groupsViewModel, child) {
+        final volunteers = groupsViewModel.groups;
+        if (volunteers.isEmpty) {
+          return Container(); // No data message removed
+        }
         return ListView.builder(
           itemCount: volunteers.length,
           itemBuilder: (context, index) {
@@ -330,58 +447,12 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
                 style: const TextStyle(color: Colors.white),
               ),
               onTap: () {
-                // Обработка нажатия на волонтёра
+                // Handle volunteer item click
               },
             );
           },
         );
-      }
-
-      if (tabName == 'Отправленные') {
-        return ListView.builder(
-          itemCount: volunteers.length,
-          itemBuilder: (context, index) {
-            final volunteer = volunteers[index];
-            return ListTile(
-              title: Text(
-                volunteer.numberOfGroup.toString(),
-                style: const TextStyle(color: Colors.white),
-              ),
-              subtitle: Text(
-                volunteer.details,
-                style: const TextStyle(color: Colors.white),
-              ),
-              onTap: () {
-                // Обработка нажатия на волонтёра
-              },
-            );
-          },
-        );
-      }
-
-      if (tabName == 'Все') {
-        return ListView.builder(
-          itemCount: volunteers.length,
-          itemBuilder: (context, index) {
-            final volunteer = volunteers[index];
-            return ListTile(
-              title: Text(
-                volunteer.numberOfGroup.toString(),
-                style: const TextStyle(color: Colors.white),
-              ),
-              subtitle: Text(
-                volunteer.details,
-                style: const TextStyle(color: Colors.white),
-              ),
-              onTap: () {
-                // Обработка нажатия на волонтёра
-              },
-            );
-          },
-        );
-      }
-
-      return Container();
-    });
+      },
+    );
   }
 }
