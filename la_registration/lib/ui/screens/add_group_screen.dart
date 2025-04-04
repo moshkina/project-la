@@ -53,8 +53,6 @@ class AddNewGroupScreenState extends State<AddNewGroupScreen> {
       setState(() {
         elder = elderVol;
         elderController.text = elderVol.fullName;
-        searchersList =
-            group.searchers ?? []; // Ensure searchers are loaded correctly
       });
     } catch (e) {
       if (mounted) {
@@ -84,10 +82,7 @@ class AddNewGroupScreenState extends State<AddNewGroupScreen> {
           DateTime.now().toIso8601String(), // Convert DateTime to String
       groupCallsign: widget.groupCallsign, // Use groupCallsign enum
       elderOfGroupId: elder!.uniqueId, // Ensure elder is not null
-      searchers: searchersList, // Ensure searchers are correctly passed
-      task: '', // Assign task if required
-      leavingTime: '', // Assign leaving time
-      returnTime: '', // Assign return time
+      // searchers: searchersList, // Ensure searchers are correctly passed
       archived: 'false', // Default archived status
     );
 

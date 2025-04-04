@@ -56,8 +56,4 @@ class VolunteersViewModel extends ChangeNotifier {
   // Получение волонтера по уникальному идентификатору
   Future<Volunteer?> getVolunteerById(int id) =>
       _volunteersDao.getVolunteerById(id);
-
-  // Проверка существования волонтера по имени и телефону
-  Future<bool> checkForVolunteerExist(String fullName, String phoneNumber) =>
-      _volunteersDao.checkForVolunteerExist(fullName, phoneNumber);
 }

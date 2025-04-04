@@ -1,16 +1,21 @@
 import 'dart:convert';
+import 'package:floor/floor.dart'; // Для TypeConverter
 import '../data/group_callsign.dart';
 import '../data/volunteer.dart';
 
-class Converter {
+class Converter extends TypeConverter<List<Volunteer>, String> {
   // Преобразование списка волонтеров в строку (JSON)
-  String listVolunteersToString(List<Volunteer> volunteers) {
-    return json.encode(volunteers.map((v) => v.toJson()).toList());
+  @override
+  String encode(List<Volunteer> value) {
+    // Параметр переименован в 'value'
+    return json.encode(value.map((v) => v.toJson()).toList());
   }
 
   // Преобразование строки (JSON) в список волонтеров
-  List<Volunteer> stringToListVolunteers(String listVolunteersAsString) {
-    var decodedList = json.decode(listVolunteersAsString) as List;
+  @override
+  List<Volunteer> decode(String databaseValue) {
+    // Параметр переименован в 'databaseValue'
+    var decodedList = json.decode(databaseValue) as List;
     return decodedList.map((item) => Volunteer.fromJson(item)).toList();
   }
 
@@ -43,45 +48,5 @@ class Converter {
   GroupCallsigns stringToGroup(String groupAsString) {
     return GroupCallsigns.values
         .firstWhere((e) => e.nameOfGroup == groupAsString);
-  }
-}
-
-extension VolunteerJson on Volunteer {
-  // Преобразование объекта Volunteer в JSON
-  Map<String, dynamic> toJson() {
-    return {
-      'uniqueId': uniqueId,
-      'index': index,
-      'fullName': fullName,
-      'callSign': callSign,
-      'nickName': nickName,
-      'region': region,
-      'phoneNumber': phoneNumber,
-      'car': car,
-      'isSent': isSent,
-      'status': status,
-      'notifyThatLeft': notifyThatLeft,
-      'timeForSearch': timeForSearch,
-      'groupId': groupId,
-    };
-  }
-
-  // Преобразование JSON в объект Volunteer
-  fromJson(Map<String, dynamic> json) {
-    return Volunteer(
-      uniqueId: json['uniqueId'] as int,
-      index: json['index'] as int,
-      fullName: json['fullName'] as String,
-      callSign: json['callSign'] as String? ?? '',
-      nickName: json['nickName'] as String? ?? '',
-      region: json['region'] as String? ?? '',
-      phoneNumber: json['phoneNumber'] as String,
-      car: json['car'] as String? ?? '',
-      isSent: json['isSent'] as String? ?? 'false',
-      status: json['status'] as String,
-      notifyThatLeft: json['notifyThatLeft'] as String? ?? 'false',
-      timeForSearch: json['timeForSearch'] as String? ?? '',
-      groupId: json['groupId'] as int?,
-    );
   }
 }

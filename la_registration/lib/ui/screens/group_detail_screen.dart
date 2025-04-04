@@ -24,8 +24,7 @@ class GroupDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Group Details')),
       body: FutureBuilder<List<Volunteer>>(
-        future: volunteersViewModel
-            .getVolunteersByGroupId(groupId), // Возвращаем список волонтёров
+        future: volunteersViewModel.getVolunteersByGroupId(groupId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -40,26 +39,12 @@ class GroupDetailScreen extends StatelessWidget {
           return Column(
             children: [
               ListTile(
-                title: Text(
-                    'Group #${group.numberOfGroup}'), // Используем numberOfGroup
-                subtitle: Text(group.dateOfCreation
-                    .toString()), // Преобразуем DateTime в String
-              ),
-              TextFormField(
-                initialValue: group.task, // Прямое использование task
-                decoration: const InputDecoration(labelText: "Task"),
-                onChanged: (value) {
-                  // Заменим final task через groupsViewModel.updateGroup
-                  groupsViewModel.updateGroup(
-                    group.copyWith(
-                        task: value), // Создаем новый объект с обновленным task
-                  );
-                },
+                title: Text('Group #${group.numberOfGroup}'),
+                subtitle: Text(group.dateOfCreation.toString()),
               ),
               Expanded(
                 child: ListView.builder(
-                  itemCount:
-                      volunteers.length, // Доступ к длине списка волонтёров
+                  itemCount: volunteers.length,
                   itemBuilder: (context, index) {
                     return VolunteerItem(volunteer: volunteers[index]);
                   },
@@ -72,6 +57,8 @@ class GroupDetailScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           // Навигация на экран редактирования или сохранения группы
+          // Или, если это создание новой группы, можно использовать:
+          //  groupsViewModel.addGroup(newGroup);
         },
         child: const Icon(Icons.save),
       ),

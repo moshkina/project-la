@@ -33,19 +33,4 @@ abstract class VolunteersDao {
 
   @Query("SELECT * FROM volunteers WHERE uniqueId = :id")
   Future<Volunteer?> getVolunteerById(int id);
-
-  @Query(
-      "SELECT * FROM volunteers WHERE status = :status AND notifyThatLeft = 0")
-  Future<List<Volunteer>> getVolunteersWithStatus(String status);
-
-  @Query(
-      "SELECT COUNT(uniqueId) > 0 FROM volunteers WHERE fullName = :fullName AND phoneNumber = :phoneNumber")
-  Future<bool> checkForVolunteerExist(String fullName, String phoneNumber);
-
-  @Query("SELECT * FROM volunteers WHERE groupId = :idOfGroup")
-  Future<List<Volunteer>> getVolunteersByIdOfGroup(int idOfGroup);
-
-  @Query(
-      "SELECT * FROM volunteers WHERE uniqueId IN (SELECT archivedVolunteerId FROM archived_groups_volunteers WHERE archivedGroupId = :idOfGroup)")
-  Future<List<Volunteer>> getVolunteersByIdOfArchiveGroup(int idOfGroup);
 }

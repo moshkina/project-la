@@ -442,10 +442,6 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
                 volunteer.numberOfGroup.toString(),
                 style: const TextStyle(color: Colors.white),
               ),
-              subtitle: Text(
-                volunteer.details,
-                style: const TextStyle(color: Colors.white),
-              ),
               onTap: () {
                 // Handle volunteer item click
               },

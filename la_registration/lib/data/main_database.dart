@@ -8,12 +8,17 @@ import 'archived_groups_volunteers.dart';
 import '../converters/converter.dart';
 import 'groups_dao.dart';
 import 'main_dao.dart';
+import '../data/volunteers_dao.dart';
+import '../converters/converter.dart'; // Убедитесь, что путь правильный
+
+part 'main_database.g.dart'; // Добавляем директиву для подключения сгенерированного файла
 
 @floor.Database(
     version: 1, entities: [Group, Volunteer, ArchivedGroupsVolunteers])
 @floor.TypeConverters([Converter])
 abstract class MainDatabase extends floor.FloorDatabase {
   GroupsDao get groupsDao;
+  VolunteersDao get volunteersDao;
   MainDao get mainDao;
 
   // Метод для получения пути к базе данных

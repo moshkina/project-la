@@ -2,6 +2,7 @@ import 'package:floor/floor.dart';
 
 @dao
 abstract class MainDao {
-  @Query(':query')
-  Future<bool> clearAutoIncrementCounter(String query);
+  // Очистить автоинкрементное поле (если нужно)
+  @Query('DELETE FROM SQLITE_SEQUENCE WHERE NAME = :tableName')
+  Future<void> resetAutoIncrement(String tableName);
 }

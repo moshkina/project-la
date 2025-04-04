@@ -8,16 +8,18 @@ abstract class GroupsDao {
   Future<List<Group>> getAllGroups();
 
   @Query(
-      'SELECT * FROM groups WHERE groupCallsign = :groupCallsign AND archived = "false"')
-  Future<List<Group>> getGroupsByCallsignNotArchived(
-      GroupCallsigns groupCallsign);
+    'SELECT * FROM groups WHERE groupCallsign = :groupCallsign AND archived = "false"',
+  )
+  Future<List<Group>> getGroupsByCallsignNotArchived(GroupCallsigns groupCallsign);
 
   @Query(
-      'SELECT * FROM groups WHERE groupCallsign = :groupCallsign AND archived = "true"')
+    'SELECT * FROM groups WHERE groupCallsign = :groupCallsign AND archived = "true"',
+  )
   Future<List<Group>> getGroupsByCallsignArchived(GroupCallsigns groupCallsign);
 
   @Query(
-      'SELECT numberOfGroup FROM groups WHERE groupCallsign = :groupCallsign ORDER BY numberOfGroup DESC LIMIT 1')
+    'SELECT numberOfGroup FROM groups WHERE groupCallsign = :groupCallsign ORDER BY numberOfGroup DESC LIMIT 1',
+  )
   Future<int?> getLastNumberOfGroupByCallsign(GroupCallsigns groupCallsign);
 
   @insert

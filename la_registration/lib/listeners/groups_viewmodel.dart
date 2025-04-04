@@ -40,8 +40,7 @@ class GroupsViewModel extends ChangeNotifier {
         const Duration(milliseconds: 200)); // Симуляция задержки
     return _groups
         .where((group) =>
-            group.groupCallsign.name == groupCallsign &&
-            group.task.isEmpty) // Условие для архивных групп
+            group.groupCallsign.name == groupCallsign) // Условие для архивных групп
         .toList();
   }
 }

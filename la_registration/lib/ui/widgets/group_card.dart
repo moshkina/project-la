@@ -12,7 +12,7 @@ class GroupCard extends StatelessWidget {
     return Card(
       child: ListTile(
         title: Text('Group ${group.numberOfGroup}'),
-        subtitle: Text('Members: ${group.membersCount}'),
+        // subtitle: Text('Members: ${group.membersCount}'),
         trailing: PopupMenuButton<String>(
           onSelected: (value) {
             if (value == 'archive' && !isArchived) {
