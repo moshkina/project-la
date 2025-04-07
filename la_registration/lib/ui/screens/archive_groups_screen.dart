@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../data/group.dart';
-import 'package:la_registration/listeners/groups_viewmodel.dart';
+import 'package:la_registration/viewmodels/groups_and_volunteers_viewmodel.dart';
 import '../widgets/group_card.dart';
 
 class ArchiveGroupsScreen extends StatelessWidget {

@@ -1,5 +1,7 @@
 import 'package:floor/floor.dart';
 
+// part 'volunteer.g.dart'; // Директива для сгенерированного кода
+
 @Entity(tableName: "volunteers")
 class Volunteer {
   @PrimaryKey(autoGenerate: true)

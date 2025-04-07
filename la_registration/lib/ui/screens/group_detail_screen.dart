@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../listeners/groups_viewmodel.dart';
-import '../../listeners/volunteers_viewmodel.dart';
 import '../../data/volunteer.dart';
+import '../../data/group.dart'; // Импорт класса Group
+import 'package:la_registration/viewmodels/groups_and_volunteers_viewmodel.dart';
 
 class GroupDetailScreen extends StatelessWidget {
   final int groupId;
@@ -19,46 +19,69 @@ class GroupDetailScreen extends StatelessWidget {
     final groupsViewModel = context.watch<GroupsViewModel>();
     final volunteersViewModel = context.watch<VolunteersViewModel>();
 
-    final group = groupsViewModel.getGroupById(groupId);
-
     return Scaffold(
       appBar: AppBar(title: const Text('Group Details')),
-      body: FutureBuilder<List<Volunteer>>(
-        future: volunteersViewModel.getVolunteersByGroupId(groupId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+      body: FutureBuilder<Group?>(
+        future: groupsViewModel.getGroupById(groupId), // Получаем группу
+        builder: (context, groupSnapshot) {
+          if (groupSnapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No volunteers found.'));
+          } else if (groupSnapshot.hasError) {
+            return Center(child: Text('Error: ${groupSnapshot.error}'));
+          } else if (!groupSnapshot.hasData || groupSnapshot.data == null) {
+            return const Center(child: Text('Group not found.'));
           }
 
-          final volunteers = snapshot.data!;
+          final group =
+              groupSnapshot.data!; // Теперь group - это Group, а не Future
 
-          return Column(
-            children: [
-              ListTile(
-                title: Text('Group #${group.numberOfGroup}'),
-                subtitle: Text(group.dateOfCreation.toString()),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: volunteers.length,
-                  itemBuilder: (context, index) {
-                    return VolunteerItem(volunteer: volunteers[index]);
-                  },
-                ),
-              ),
-            ],
+          return FutureBuilder<List<Volunteer>>(
+            future: volunteersViewModel.getVolunteersByGroupId(groupId),
+            builder: (context, volunteersSnapshot) {
+              if (volunteersSnapshot.connectionState ==
+                  ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (volunteersSnapshot.hasError) {
+                return Center(
+                    child: Text('Error: ${volunteersSnapshot.error}'));
+              } else if (!volunteersSnapshot.hasData ||
+                  volunteersSnapshot.data!.isEmpty) {
+                return Column(
+                  children: [
+                    ListTile(
+                      title: Text('Group #${group.numberOfGroup}'),
+                      subtitle: Text(group.dateOfCreation.toString()),
+                    ),
+                    const Center(child: Text('No volunteers found.')),
+                  ],
+                );
+              }
+
+              final volunteers = volunteersSnapshot.data!;
+
+              return Column(
+                children: [
+                  ListTile(
+                    title: Text('Group #${group.numberOfGroup}'),
+                    subtitle: Text(group.dateOfCreation.toString()),
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: volunteers.length,
+                      itemBuilder: (context, index) {
+                        return VolunteerItem(volunteer: volunteers[index]);
+                      },
+                    ),
+                  ),
+                ],
+              );
+            },
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           // Навигация на экран редактирования или сохранения группы
-          // Или, если это создание новой группы, можно использовать:
-          //  groupsViewModel.addGroup(newGroup);
         },
         child: const Icon(Icons.save),
       ),

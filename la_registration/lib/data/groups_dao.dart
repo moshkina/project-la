@@ -1,6 +1,7 @@
 import 'package:floor/floor.dart';
 import 'group.dart';
 import 'group_callsign.dart';
+// part 'groups_dao.g.dart';
 
 @dao
 abstract class GroupsDao {
@@ -10,7 +11,8 @@ abstract class GroupsDao {
   @Query(
     'SELECT * FROM groups WHERE groupCallsign = :groupCallsign AND archived = "false"',
   )
-  Future<List<Group>> getGroupsByCallsignNotArchived(GroupCallsigns groupCallsign);
+  Future<List<Group>> getGroupsByCallsignNotArchived(
+      GroupCallsigns groupCallsign);
 
   @Query(
     'SELECT * FROM groups WHERE groupCallsign = :groupCallsign AND archived = "true"',

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:provider/provider.dart';
 import '../../data/volunteer.dart';
-import '../../listeners/volunteers_viewmodel.dart';
+import 'package:la_registration/viewmodels/groups_and_volunteers_viewmodel.dart';
 import 'package:flutter/foundation.dart';
 
 class BarCodeScannerScreen extends StatefulWidget {

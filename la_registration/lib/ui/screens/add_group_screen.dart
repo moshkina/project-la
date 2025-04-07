@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:la_registration/data/group.dart';
 import 'package:la_registration/data/volunteer.dart';
-import 'package:la_registration/listeners/groups_viewmodel.dart';
-import 'package:la_registration/listeners/volunteers_viewmodel.dart';
+import 'package:la_registration/viewmodels/groups_and_volunteers_viewmodel.dart';
 import 'package:la_registration/data/group_callsign.dart'; // Ensure GroupCallsign is imported correctly
 
 class AddNewGroupScreen extends StatefulWidget {
@@ -46,14 +45,25 @@ class AddNewGroupScreenState extends State<AddNewGroupScreen> {
     final volunteersViewModel = context.read<VolunteersViewModel>();
 
     try {
-      final group = groupsViewModel.getGroupById(widget.groupId);
-      final elderVol =
-          await volunteersViewModel.getVolunteerById(group.elderOfGroupId);
+      // Получаем группу, ожидая результат Future
+      final group = await groupsViewModel.getGroupById(widget.groupId);
 
-      setState(() {
-        elder = elderVol;
-        elderController.text = elderVol.fullName;
-      });
+      // Проверяем, если группа существует, то ищем старшего
+      if (group != null) {
+        final elderVol =
+            await volunteersViewModel.getVolunteerById(group.elderOfGroupId);
+
+        setState(() {
+          elder = elderVol;
+          // Проверяем, если elderVol не равен null
+          elderController.text = elderVol?.fullName ?? '';
+        });
+      } else {
+        // Обработка случая, когда группа не найдена
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Группа не найдена")),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

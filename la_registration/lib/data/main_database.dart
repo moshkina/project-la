@@ -9,9 +9,8 @@ import '../converters/converter.dart';
 import 'groups_dao.dart';
 import 'main_dao.dart';
 import '../data/volunteers_dao.dart';
-import '../converters/converter.dart'; // Убедитесь, что путь правильный
 
-part 'main_database.g.dart'; // Добавляем директиву для подключения сгенерированного файла
+// part 'main_database.g.dart'; // Добавляем директиву для подключения сгенерированного файла
 
 @floor.Database(
     version: 1, entities: [Group, Volunteer, ArchivedGroupsVolunteers])

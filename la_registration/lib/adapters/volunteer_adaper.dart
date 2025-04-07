@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:la_registration/data/volunteer.dart';
-import 'package:la_registration/data/groups_viewmodel.dart';
-import 'package:la_registration/data/volunteers_viewmodel.dart';
+import 'package:la_registration/viewmodels/groups_and_volunteers_viewmodel.dart';
 import 'package:la_registration/listeners/on_volunteer_click_listener.dart';
 import 'package:la_registration/listeners/on_volunteer_phone_number_click_listener.dart';
 import 'package:la_registration/util/time_picker_dialog.dart'; // Your time picker

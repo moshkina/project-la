@@ -3,6 +3,8 @@ import '../data/group_callsign.dart'; // Убедитесь, что путь и�
 import '../converters/converter.dart'; // Импортируем конвертер
 import 'volunteer.dart'; // Импортируем модель волонтера
 
+// part 'group.g.dart'; // Директива для сгенерированного кода
+
 @Entity(
   tableName: 'groups',
   foreignKeys: [

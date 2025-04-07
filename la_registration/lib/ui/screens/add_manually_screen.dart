@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:la_registration/data/volunteer.dart';
-import 'package:la_registration/listeners/volunteers_viewmodel.dart';
+import 'package:la_registration/data/volunteers_dao.dart';
+import 'package:provider/provider.dart';
+import 'package:la_registration/viewmodels/groups_and_volunteers_viewmodel.dart';
 
 class AddManuallyScreen extends StatefulWidget {
   final int volunteerId;
@@ -27,7 +29,8 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
   @override
   void initState() {
     super.initState();
-    _viewModel = VolunteersViewModel();
+    _viewModel = Provider.of<VolunteersViewModel>(context, listen: false);
+
     fullNameController = TextEditingController();
     callSignController = TextEditingController();
     forumNicknameController = TextEditingController();
@@ -38,7 +41,7 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
     if (widget.volunteerId != 0) {
       _viewModel.getVolunteerById(widget.volunteerId).then((vol) {
         setState(() {
-          volunteer = vol;
+          volunteer = vol!;
           fullNameController.text = volunteer.fullName;
           callSignController.text = volunteer.callSign;
           forumNicknameController.text = volunteer.nickName;
@@ -63,6 +66,7 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text("Пожалуйста, заполните обязательные поля.")));
     } else if (isEdited) {
+      print('[DEBUG] Обновление волонтера ID: ${volunteer.uniqueId}');
       volunteer = Volunteer(
           uniqueId: volunteer.uniqueId, // Keep the existing uniqueId
           index: volunteer.index, // Передаем индекс
@@ -76,9 +80,15 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
           notifyThatLeft: volunteer.notifyThatLeft,
           timeForSearch: volunteer.timeForSearch,
           groupId: volunteer.groupId);
-      _viewModel.updateVolunteer(volunteer);
+      _viewModel.updateVolunteer(volunteer).then((_) {
+        print('[DEBUG] Волонтер успешно обновлен'); // <--
+        Navigator.pop(context);
+      }).catchError((e) {
+        print('[ERROR] Ошибка обновления: $e'); // <--
+      });
       Navigator.pop(context);
     } else {
+      print('[DEBUG] Создание нового волонтера');
       Volunteer newVolunteer = Volunteer(
           uniqueId: 0,
           index: 0, // Убедитесь, что _index передается
@@ -93,7 +103,12 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
           timeForSearch: "", // Задайте нужные значения по умолчанию
           groupId: null // Если нужно, передайте значение groupId
           );
-      _viewModel.insertVolunteer(newVolunteer);
+      _viewModel.insertVolunteer(newVolunteer).then((_) {
+        print('[DEBUG] Новый волонтер успешно сохранен'); // <--
+        Navigator.pop(context);
+      }).catchError((e) {
+        print('[ERROR] Ошибка сохранения: $e'); // <--
+      });
       Navigator.pop(context);
     }
   }

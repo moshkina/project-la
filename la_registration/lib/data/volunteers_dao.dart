@@ -1,6 +1,7 @@
 import 'package:floor/floor.dart';
 import 'volunteer.dart';
 
+// part 'volunteers_dao.g.dart'; 
 @dao
 abstract class VolunteersDao {
   @Query("SELECT * FROM volunteers ORDER BY `_index` ASC")
@@ -33,4 +34,7 @@ abstract class VolunteersDao {
 
   @Query("SELECT * FROM volunteers WHERE uniqueId = :id")
   Future<Volunteer?> getVolunteerById(int id);
+
+  @Query("SELECT * FROM volunteers WHERE groupId = :groupId")
+  Future<List<Volunteer>> getVolunteersByGroupId(int groupId);
 }

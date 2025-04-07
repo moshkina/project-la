@@ -7,7 +7,7 @@ class MainViewModel extends ChangeNotifier {
 
   Future<void> backupDatabase(String filePath) async {
     final dbPath =
-        await MainDatabase.getDatabasePath('app_database.db'); // Получение пути
+        await MainDatabase.getDatabasePath('app_database.db'); // Получение пути   
     final backupFile = File(filePath);
     await File(dbPath).copy(backupFile.path);
   }

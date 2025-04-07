@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:la_registration/listeners/groups_viewmodel.dart';
+import 'package:la_registration/viewmodels/groups_and_volunteers_viewmodel.dart';
 import 'package:la_registration/data/group_callsign.dart';
 import 'package:la_registration/ui/screens/group_tabs_screen.dart';
 import 'package:la_registration/ui/screens/barcode_scanner_screen.dart';
 import 'package:la_registration/ui/screens/add_manually_screen.dart';
+import 'package:la_registration/data/group.dart';
 
 class TabbedMainScreen extends StatefulWidget {
   const TabbedMainScreen({super.key});
@@ -174,24 +175,24 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
                 ),
               ),
             ),
-            ListTile(
-              title: const Text(
-                'Сохранить и переслать',
-                style: TextStyle(color: Colors.white),
-              ),
-              onTap: () {
-                // Save and send data logic
-              },
-            ),
-            ListTile(
-              title: const Text(
-                'Загрузить базу данных',
-                style: TextStyle(color: Colors.white),
-              ),
-              onTap: () {
-                // Load database logic
-              },
-            ),
+            // ListTile(
+            //   title: const Text(
+            //     'Сохранить и переслать',
+            //     style: TextStyle(color: Colors.white),
+            //   ),
+            //   onTap: () {
+            //     // Save and send data logic
+            //   },
+            // ),
+            // ListTile(
+            //   title: const Text(
+            //     'Загрузить базу данных',
+            //     style: TextStyle(color: Colors.white),
+            //   ),
+            //   onTap: () {
+            //     // Load database logic
+            //   },
+            // ),
           ],
         ),
       ),
@@ -428,27 +429,41 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
 
   Widget _buildVolunteersList(BuildContext context, String tabName) {
     return Consumer<GroupsViewModel>(
-      builder: (context, groupsViewModel, child) {
-        final volunteers = groupsViewModel.groups;
-        if (volunteers.isEmpty) {
-          return Container(); // No data message removed
-        }
-        return ListView.builder(
-          itemCount: volunteers.length,
-          itemBuilder: (context, index) {
-            final volunteer = volunteers[index];
-            return ListTile(
-              title: Text(
-                volunteer.numberOfGroup.toString(),
-                style: const TextStyle(color: Colors.white),
-              ),
-              onTap: () {
-                // Handle volunteer item click
-              },
-            );
-          },
-        );
-      },
-    );
+        builder: (context, groupsViewModel, child) {
+      return FutureBuilder<List<Group>>(
+        future: groupsViewModel.getAllGroups(), // Используем FutureBuilder
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Ошибка: ${snapshot.error}'));
+          }
+
+          final groups = snapshot.data ?? [];
+
+          if (groups.isEmpty) {
+            return Container(); // No data message removed
+          }
+
+          return ListView.builder(
+            itemCount: groups.length,
+            itemBuilder: (context, index) {
+              final group = groups[index];
+              return ListTile(
+                title: Text(
+                  group.numberOfGroup.toString(),
+                  style: const TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  // Handle group item click
+                },
+              );
+            },
+          );
+        },
+      );
+    });
   }
 }

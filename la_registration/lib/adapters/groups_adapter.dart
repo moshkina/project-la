@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:la_registration/data/group.dart';
-import 'package:la_registration/data/volunteers_viewmodel.dart';
+import 'package:la_registration/viewmodels/groups_and_volunteers_viewmodel.dart';
 import 'package:la_registration/listeners/on_click_group_options_menu.dart';
 import 'package:la_registration/listeners/on_group_click_listener.dart';
 import 'package:la_registration/listeners/on_volunteer_phone_number_click_listener.dart';

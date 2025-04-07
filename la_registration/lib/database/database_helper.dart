@@ -23,7 +23,8 @@ class DatabaseHelper {
   Future<Database> _initDatabase() async {
     var databasesPath = await getDatabasesPath();
     String path = join(databasesPath, _databaseName);
-    return await openDatabase(path, version: _databaseVersion, onCreate: _onCreate);
+    return await openDatabase(path,
+        version: _databaseVersion, onCreate: _onCreate);
   }
 
   // Создание таблиц
@@ -81,7 +82,8 @@ class DatabaseHelper {
   // Пример функции для вставки данных в таблицу "volunteers"
   Future<void> insertVolunteer(Map<String, dynamic> row) async {
     final db = await database;
-    await db.insert(tableVolunteers, row, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(tableVolunteers, row,
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   // Пример функции для получения всех волонтеров
