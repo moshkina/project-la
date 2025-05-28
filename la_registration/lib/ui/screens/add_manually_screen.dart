@@ -90,7 +90,6 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
     } else {
       print('[DEBUG] Создание нового волонтера');
       Volunteer newVolunteer = Volunteer(
-          uniqueId: 0,
           index: 0, // Убедитесь, что _index передается
           fullName: fullName,
           phoneNumber: phoneNumber,
@@ -109,7 +108,6 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
       }).catchError((e) {
         print('[ERROR] Ошибка сохранения: $e'); // <--
       });
-      Navigator.pop(context);
     }
   }
 

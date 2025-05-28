@@ -82,8 +82,21 @@ class GroupsViewModel extends ChangeNotifier {
 
 class VolunteersViewModel extends ChangeNotifier {
   final VolunteersDao _volunteersDao;
+  List<Volunteer> _volunteers = [];
 
-  VolunteersViewModel(this._volunteersDao);
+  List<Volunteer> get volunteers => _volunteers;
+
+  VolunteersViewModel(this._volunteersDao) {
+    loadVolunteers();
+  }
+ Future<void> loadVolunteers() async {
+  _volunteers = await _volunteersDao.getAllVolunteers();
+  print("Загружено волонтёров: ${_volunteers.length}");
+  for (var v in _volunteers) {
+    print(v);
+  }
+  notifyListeners();
+}
 
   // Получение всех волонтеров
   Future<List<Volunteer>> getAllVolunteers() =>
@@ -113,25 +126,25 @@ class VolunteersViewModel extends ChangeNotifier {
   // Вставка нового волонтера в базу данных
   Future<void> insertVolunteer(Volunteer volunteer) async {
     await _volunteersDao.insertVolunteer(volunteer);
-    notifyListeners();
+    await loadVolunteers(); // Обновляем список и уведомляем
   }
 
   // Обновление данных о волонтере
   Future<void> updateVolunteer(Volunteer volunteer) async {
     await _volunteersDao.updateVolunteer(volunteer);
-    notifyListeners();
+    await loadVolunteers();
   }
 
   // Удаление волонтера
   Future<void> deleteVolunteer(Volunteer volunteer) async {
     await _volunteersDao.deleteVolunteer(volunteer);
-    notifyListeners();
+    await loadVolunteers();
   }
 
   // Удаление всех волонтёров
   Future<void> deleteAllVolunteers() async {
     await _volunteersDao.deleteAllVolunteers();
-    notifyListeners();
+    await loadVolunteers();
   }
 
   // Получение волонтера по уникальному идентификатору

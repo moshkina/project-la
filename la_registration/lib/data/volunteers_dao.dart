@@ -4,13 +4,13 @@ import 'volunteer.dart';
 // part 'volunteers_dao.g.dart'; 
 @dao
 abstract class VolunteersDao {
-  @Query("SELECT * FROM volunteers ORDER BY `_index` ASC")
+  @Query("SELECT * FROM volunteers ORDER BY _index ASC")
   Future<List<Volunteer>> getAllVolunteers();
 
-  @Query("SELECT * FROM volunteers WHERE isSent = 1")
+  @Query("SELECT * FROM volunteers WHERE isSent = 'true'")
   Future<List<Volunteer>> getSentVolunteers();
 
-  @Query("SELECT * FROM volunteers WHERE isSent = 0")
+  @Query("SELECT * FROM volunteers WHERE isSent ='false'")
   Future<List<Volunteer>> getNotSentVolunteers();
 
   @Query("SELECT * FROM volunteers WHERE groupId IS NOT NULL")

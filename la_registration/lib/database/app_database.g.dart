@@ -100,7 +100,7 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `groups` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `numberOfGroup` INTEGER NOT NULL, `elderOfGroupId` INTEGER NOT NULL, `navigators` TEXT NOT NULL, `cars` TEXT NOT NULL, `dateOfCreation` TEXT NOT NULL, `groupCallsign` INTEGER NOT NULL, `archived` TEXT NOT NULL, FOREIGN KEY (`elderOfGroupId`) REFERENCES `volunteers` (`uniqueId`) ON UPDATE NO ACTION ON DELETE CASCADE)');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `volunteers` (`uniqueId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `index` INTEGER NOT NULL, `fullName` TEXT NOT NULL, `callSign` TEXT NOT NULL, `nickName` TEXT NOT NULL, `region` TEXT NOT NULL, `phoneNumber` TEXT NOT NULL, `car` TEXT NOT NULL, `isSent` TEXT NOT NULL, `status` TEXT NOT NULL, `notifyThatLeft` TEXT NOT NULL, `timeForSearch` TEXT NOT NULL, `groupId` INTEGER)');
+            'CREATE TABLE IF NOT EXISTS `volunteers` (`uniqueId` INTEGER PRIMARY KEY AUTOINCREMENT, `_index` INTEGER NOT NULL, `fullName` TEXT NOT NULL, `callSign` TEXT NOT NULL, `nickName` TEXT NOT NULL, `region` TEXT NOT NULL, `phoneNumber` TEXT NOT NULL, `car` TEXT NOT NULL, `isSent` INTEGER NOT NULL, `status` TEXT NOT NULL, `notifyThatLeft` TEXT NOT NULL, `timeForSearch` TEXT NOT NULL, `groupId` INTEGER)');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -290,14 +290,14 @@ class _$VolunteersDao extends VolunteersDao {
             'volunteers',
             (Volunteer item) => <String, Object?>{
                   'uniqueId': item.uniqueId,
-                  'index': item.index,
+                  '_index': item.index,
                   'fullName': item.fullName,
                   'callSign': item.callSign,
                   'nickName': item.nickName,
                   'region': item.region,
                   'phoneNumber': item.phoneNumber,
                   'car': item.car,
-                  'isSent': item.isSent,
+                  'isSent': item.isSent ? 1 : 0,
                   'status': item.status,
                   'notifyThatLeft': item.notifyThatLeft,
                   'timeForSearch': item.timeForSearch,
@@ -309,14 +309,14 @@ class _$VolunteersDao extends VolunteersDao {
             ['uniqueId'],
             (Volunteer item) => <String, Object?>{
                   'uniqueId': item.uniqueId,
-                  'index': item.index,
+                  '_index': item.index,
                   'fullName': item.fullName,
                   'callSign': item.callSign,
                   'nickName': item.nickName,
                   'region': item.region,
                   'phoneNumber': item.phoneNumber,
                   'car': item.car,
-                  'isSent': item.isSent,
+                  'isSent': item.isSent ? 1 : 0,
                   'status': item.status,
                   'notifyThatLeft': item.notifyThatLeft,
                   'timeForSearch': item.timeForSearch,
@@ -328,14 +328,14 @@ class _$VolunteersDao extends VolunteersDao {
             ['uniqueId'],
             (Volunteer item) => <String, Object?>{
                   'uniqueId': item.uniqueId,
-                  'index': item.index,
+                  '_index': item.index,
                   'fullName': item.fullName,
                   'callSign': item.callSign,
                   'nickName': item.nickName,
                   'region': item.region,
                   'phoneNumber': item.phoneNumber,
                   'car': item.car,
-                  'isSent': item.isSent,
+                  'isSent': item.isSent ? 1 : 0,
                   'status': item.status,
                   'notifyThatLeft': item.notifyThatLeft,
                   'timeForSearch': item.timeForSearch,
@@ -357,17 +357,17 @@ class _$VolunteersDao extends VolunteersDao {
   @override
   Future<List<Volunteer>> getAllVolunteers() async {
     return _queryAdapter.queryList(
-        'SELECT * FROM volunteers ORDER BY `_index` ASC',
+        'SELECT * FROM volunteers ORDER BY _index ASC',
         mapper: (Map<String, Object?> row) => Volunteer(
-            uniqueId: row['uniqueId'] as int,
-            index: row['index'] as int,
+            uniqueId: row['uniqueId'] as int?,
+            index: row['_index'] as int,
             fullName: row['fullName'] as String,
             callSign: row['callSign'] as String,
             nickName: row['nickName'] as String,
             region: row['region'] as String,
             phoneNumber: row['phoneNumber'] as String,
             car: row['car'] as String,
-            isSent: row['isSent'] as String,
+            isSent: (row['isSent'] as int) != 0,
             status: row['status'] as String,
             notifyThatLeft: row['notifyThatLeft'] as String,
             timeForSearch: row['timeForSearch'] as String,
@@ -376,17 +376,18 @@ class _$VolunteersDao extends VolunteersDao {
 
   @override
   Future<List<Volunteer>> getSentVolunteers() async {
-    return _queryAdapter.queryList('SELECT * FROM volunteers WHERE isSent = 1',
+    return _queryAdapter.queryList(
+        'SELECT * FROM volunteers WHERE isSent = \'true\'',
         mapper: (Map<String, Object?> row) => Volunteer(
-            uniqueId: row['uniqueId'] as int,
-            index: row['index'] as int,
+            uniqueId: row['uniqueId'] as int?,
+            index: row['_index'] as int,
             fullName: row['fullName'] as String,
             callSign: row['callSign'] as String,
             nickName: row['nickName'] as String,
             region: row['region'] as String,
             phoneNumber: row['phoneNumber'] as String,
             car: row['car'] as String,
-            isSent: row['isSent'] as String,
+            isSent: (row['isSent'] as int) != 0,
             status: row['status'] as String,
             notifyThatLeft: row['notifyThatLeft'] as String,
             timeForSearch: row['timeForSearch'] as String,
@@ -395,17 +396,18 @@ class _$VolunteersDao extends VolunteersDao {
 
   @override
   Future<List<Volunteer>> getNotSentVolunteers() async {
-    return _queryAdapter.queryList('SELECT * FROM volunteers WHERE isSent = 0',
+    return _queryAdapter.queryList(
+        'SELECT * FROM volunteers WHERE isSent =\'false\'',
         mapper: (Map<String, Object?> row) => Volunteer(
-            uniqueId: row['uniqueId'] as int,
-            index: row['index'] as int,
+            uniqueId: row['uniqueId'] as int?,
+            index: row['_index'] as int,
             fullName: row['fullName'] as String,
             callSign: row['callSign'] as String,
             nickName: row['nickName'] as String,
             region: row['region'] as String,
             phoneNumber: row['phoneNumber'] as String,
             car: row['car'] as String,
-            isSent: row['isSent'] as String,
+            isSent: (row['isSent'] as int) != 0,
             status: row['status'] as String,
             notifyThatLeft: row['notifyThatLeft'] as String,
             timeForSearch: row['timeForSearch'] as String,
@@ -417,15 +419,15 @@ class _$VolunteersDao extends VolunteersDao {
     return _queryAdapter.queryList(
         'SELECT * FROM volunteers WHERE groupId IS NOT NULL',
         mapper: (Map<String, Object?> row) => Volunteer(
-            uniqueId: row['uniqueId'] as int,
-            index: row['index'] as int,
+            uniqueId: row['uniqueId'] as int?,
+            index: row['_index'] as int,
             fullName: row['fullName'] as String,
             callSign: row['callSign'] as String,
             nickName: row['nickName'] as String,
             region: row['region'] as String,
             phoneNumber: row['phoneNumber'] as String,
             car: row['car'] as String,
-            isSent: row['isSent'] as String,
+            isSent: (row['isSent'] as int) != 0,
             status: row['status'] as String,
             notifyThatLeft: row['notifyThatLeft'] as String,
             timeForSearch: row['timeForSearch'] as String,
@@ -438,15 +440,15 @@ class _$VolunteersDao extends VolunteersDao {
     return _queryAdapter.queryList(
         'SELECT * FROM volunteers WHERE status = ?1 AND groupId IS NULL',
         mapper: (Map<String, Object?> row) => Volunteer(
-            uniqueId: row['uniqueId'] as int,
-            index: row['index'] as int,
+            uniqueId: row['uniqueId'] as int?,
+            index: row['_index'] as int,
             fullName: row['fullName'] as String,
             callSign: row['callSign'] as String,
             nickName: row['nickName'] as String,
             region: row['region'] as String,
             phoneNumber: row['phoneNumber'] as String,
             car: row['car'] as String,
-            isSent: row['isSent'] as String,
+            isSent: (row['isSent'] as int) != 0,
             status: row['status'] as String,
             notifyThatLeft: row['notifyThatLeft'] as String,
             timeForSearch: row['timeForSearch'] as String,
@@ -463,15 +465,15 @@ class _$VolunteersDao extends VolunteersDao {
   Future<Volunteer?> getVolunteerById(int id) async {
     return _queryAdapter.query('SELECT * FROM volunteers WHERE uniqueId = ?1',
         mapper: (Map<String, Object?> row) => Volunteer(
-            uniqueId: row['uniqueId'] as int,
-            index: row['index'] as int,
+            uniqueId: row['uniqueId'] as int?,
+            index: row['_index'] as int,
             fullName: row['fullName'] as String,
             callSign: row['callSign'] as String,
             nickName: row['nickName'] as String,
             region: row['region'] as String,
             phoneNumber: row['phoneNumber'] as String,
             car: row['car'] as String,
-            isSent: row['isSent'] as String,
+            isSent: (row['isSent'] as int) != 0,
             status: row['status'] as String,
             notifyThatLeft: row['notifyThatLeft'] as String,
             timeForSearch: row['timeForSearch'] as String,
@@ -484,15 +486,15 @@ class _$VolunteersDao extends VolunteersDao {
     return _queryAdapter.queryList(
         'SELECT * FROM volunteers WHERE groupId = ?1',
         mapper: (Map<String, Object?> row) => Volunteer(
-            uniqueId: row['uniqueId'] as int,
-            index: row['index'] as int,
+            uniqueId: row['uniqueId'] as int?,
+            index: row['_index'] as int,
             fullName: row['fullName'] as String,
             callSign: row['callSign'] as String,
             nickName: row['nickName'] as String,
             region: row['region'] as String,
             phoneNumber: row['phoneNumber'] as String,
             car: row['car'] as String,
-            isSent: row['isSent'] as String,
+            isSent: (row['isSent'] as int) != 0,
             status: row['status'] as String,
             notifyThatLeft: row['notifyThatLeft'] as String,
             timeForSearch: row['timeForSearch'] as String,

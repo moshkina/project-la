@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:la_registration/data/volunteer.dart';
+
 import 'package:provider/provider.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:la_registration/viewmodels/groups_and_volunteers_viewmodel.dart';
@@ -25,6 +27,9 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+      Future.microtask(() =>
+      Provider.of<VolunteersViewModel>(context, listen: false)
+          .loadVolunteers());
   }
 
   @override
@@ -427,43 +432,91 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
     );
   }
 
+  // Widget _buildVolunteersList(BuildContext context, String tabName) {
+  //   return Consumer<GroupsViewModel>(
+  //       builder: (context, groupsViewModel, child) {
+  //     return FutureBuilder<List<Group>>(
+  //       future: groupsViewModel.getAllGroups(), // Используем FutureBuilder
+  //       builder: (context, snapshot) {
+  //         if (snapshot.connectionState == ConnectionState.waiting) {
+  //           return const Center(child: CircularProgressIndicator());
+  //         }
+
+  //         if (snapshot.hasError) {
+  //           return Center(child: Text('Ошибка: ${snapshot.error}'));
+  //         }
+
+  //         final groups = snapshot.data ?? [];
+
+  //         if (groups.isEmpty) {
+  //           return Container(); // No data message removed
+  //         }
+
+  //         return ListView.builder(
+  //           itemCount: groups.length,
+  //           itemBuilder: (context, index) {
+  //             final group = groups[index];
+  //             return ListTile(
+  //               title: Text(
+  //                 group.numberOfGroup.toString(),
+  //                 style: const TextStyle(color: Colors.white),
+  //               ),
+  //               onTap: () {
+  //                 // Handle group item click
+  //               },
+  //             );
+  //           },
+  //         );
+  //       },
+  //     );
+  //   });
+  // }
   Widget _buildVolunteersList(BuildContext context, String tabName) {
-    return Consumer<GroupsViewModel>(
-        builder: (context, groupsViewModel, child) {
-      return FutureBuilder<List<Group>>(
-        future: groupsViewModel.getAllGroups(), // Используем FutureBuilder
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+  return Consumer<VolunteersViewModel>(
+    builder: (context, viewModel, child) {
+      List<Volunteer> volunteers = [];
 
-          if (snapshot.hasError) {
-            return Center(child: Text('Ошибка: ${snapshot.error}'));
-          }
+      switch (tabName) {
+        case 'Новые':
+          volunteers = viewModel.volunteers.where((v) => !v.isSent).toList();
+          break;
+        case 'Отправленные':
+          volunteers = viewModel.volunteers.where((v) => v.isSent).toList();
+          break;
+        case 'Все':
+          volunteers = viewModel.volunteers;
+          break;
+      }
 
-          final groups = snapshot.data ?? [];
-
-          if (groups.isEmpty) {
-            return Container(); // No data message removed
-          }
-
-          return ListView.builder(
-            itemCount: groups.length,
-            itemBuilder: (context, index) {
-              final group = groups[index];
-              return ListTile(
-                title: Text(
-                  group.numberOfGroup.toString(),
-                  style: const TextStyle(color: Colors.white),
-                ),
-                onTap: () {
-                  // Handle group item click
-                },
-              );
-            },
+      return ListView.builder(
+        itemCount: volunteers.length,
+        itemBuilder: (context, index) {
+          final volunteer = volunteers[index];
+          return Card(
+            color: const Color(0xFF424242),
+            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: ListTile(
+              title: Text(
+                volunteer.fullName ?? 'Без имени',
+                style: const TextStyle(color: Colors.white),
+              ),
+              subtitle: Text(
+                'Группа: ${volunteer.groupId ?? 'не указано'}\nТелефон: ${volunteer.phoneNumber ?? 'не указан'}',
+                style: const TextStyle(color: Colors.white70),
+              ),
+              isThreeLine: true,
+              onTap: () {
+                // Опционально: открыть детальную информацию
+              },
+            ),
           );
         },
       );
-    });
-  }
+    },
+  );
+}
+
 }

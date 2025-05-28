@@ -91,7 +91,7 @@ class AddNewGroupScreenState extends State<AddNewGroupScreen> {
       dateOfCreation:
           DateTime.now().toIso8601String(), // Convert DateTime to String
       groupCallsign: widget.groupCallsign, // Use groupCallsign enum
-      elderOfGroupId: elder!.uniqueId, // Ensure elder is not null
+      elderOfGroupId: elder!.uniqueId ?? 0, // Ensure elder is not null
       // searchers: searchersList, // Ensure searchers are correctly passed
       archived: 'false', // Default archived status
     );

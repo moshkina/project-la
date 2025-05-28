@@ -90,7 +90,7 @@ class BarCodeScannerScreenState extends State<BarCodeScannerScreen> {
         region: "Unknown",
         car: "None",
         status: "Active", // Статус по умолчанию
-        isSent: "false", // Значение по умолчанию
+        isSent: false, // Значение по умолчанию
         notifyThatLeft: "false", // Значение по умолчанию
         timeForSearch: "", // Значение по умолчанию
         groupId: null, // Если нужно, передайте сюда ID группы или оставьте null

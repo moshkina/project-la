@@ -1,26 +1,27 @@
 import 'package:floor/floor.dart';
 
-// part 'volunteer.g.dart'; // Директива для сгенерированного кода
-
 @Entity(tableName: "volunteers")
 class Volunteer {
   @PrimaryKey(autoGenerate: true)
-  final int uniqueId;
+  final int? uniqueId;
+
+  @ColumnInfo(name: "_index")
   final int index;
+
   final String fullName;
   final String callSign;
   final String nickName;
   final String region;
   final String phoneNumber;
   final String car;
-  final String isSent;
+  final bool isSent;
   String status;
   final String notifyThatLeft;
   String timeForSearch;
   final int? groupId;
 
   Volunteer({
-    required this.uniqueId,
+    this.uniqueId, // теперь необязательный — Floor сам сгенерирует
     required this.index,
     required this.fullName,
     this.callSign = "",
@@ -28,8 +29,8 @@ class Volunteer {
     this.region = "",
     required this.phoneNumber,
     this.car = "",
-    this.isSent = "false",
-    required this.status,
+    this.isSent = false,
+    this.status = "Active",
     this.notifyThatLeft = "false",
     this.timeForSearch = "",
     this.groupId,
@@ -38,7 +39,6 @@ class Volunteer {
   @override
   String toString() => "$fullName ($callSign)";
 
-  // Преобразование объекта Volunteer в JSON
   Map<String, dynamic> toJson() {
     return {
       'uniqueId': uniqueId,
@@ -57,10 +57,9 @@ class Volunteer {
     };
   }
 
-  // Преобразование JSON в объект Volunteer
   factory Volunteer.fromJson(Map<String, dynamic> json) {
     return Volunteer(
-      uniqueId: json['uniqueId'] as int,
+      uniqueId: json['uniqueId'] as int?,
       index: json['index'] as int,
       fullName: json['fullName'] as String,
       callSign: json['callSign'] as String? ?? '',
@@ -68,8 +67,8 @@ class Volunteer {
       region: json['region'] as String? ?? '',
       phoneNumber: json['phoneNumber'] as String,
       car: json['car'] as String? ?? '',
-      isSent: json['isSent'] as String? ?? 'false',
-      status: json['status'] as String,
+      isSent: json['isSent'] as bool? ?? false,
+      status: json['status'] as String? ?? 'Active',
       notifyThatLeft: json['notifyThatLeft'] as String? ?? 'false',
       timeForSearch: json['timeForSearch'] as String? ?? '',
       groupId: json['groupId'] as int?,
