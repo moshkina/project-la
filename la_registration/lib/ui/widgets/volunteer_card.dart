@@ -6,7 +6,7 @@ class VolunteerCard extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onChangeStatus;
   final VoidCallback? onChangeTime;
-  final String? groupName; // если хочешь отображать название группы
+  final String? groupName;
 
   const VolunteerCard({
     Key? key,
@@ -20,6 +20,7 @@ class VolunteerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Color(0xFF4E4E4E),
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 3,
@@ -32,19 +33,21 @@ class VolunteerCard extends StatelessWidget {
               children: [
                 _buildTopRow(context),
                 const SizedBox(height: 8),
-                Text('ФИО: ${volunteer.fullName}'),
-                Text('Позывной: ${volunteer.callSign}'),
-                Text('Ник на форуме: ${volunteer.nickName}'),
-                Text('Регион: ${volunteer.region}'),
-                Text('Телефон: ${volunteer.phoneNumber}'),
-                Text('Авто: ${volunteer.car}'),
-                if (groupName != null) Text('Группа: $groupName'),
+                Text('ФИО: ${volunteer.fullName}',style: TextStyle(color: Colors.white),),
+                Text('Позывной: ${volunteer.callSign}',style: TextStyle(color: Colors.white)),
+                Text('Ник на форуме: ${volunteer.nickName}',style: TextStyle(color: Colors.white)),
+                Text('Регион: ${volunteer.region}',style: TextStyle(color: Colors.white)),
+                Text('Телефон: ${volunteer.phoneNumber}',style: TextStyle(color: Colors.white)),
+                Text('Авто: ${volunteer.car}',style: TextStyle(color: Colors.white)),
+                if (groupName != null) Text('Группа: $groupName',style: TextStyle(color: Colors.white)),
               ],
             ),
             Positioned(
               top: 0,
               right: 0,
               child: PopupMenuButton<String>(
+                icon:Icon(Icons.arrow_drop_down_outlined, color:Colors.white),
+                color:Colors.black,
                 onSelected: (value) {
                   switch (value) {
                     case 'status':
@@ -59,9 +62,9 @@ class VolunteerCard extends StatelessWidget {
                   }
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(value: 'status', child: Text('Изменить статус')),
-                  const PopupMenuItem(value: 'time', child: Text('Изменить время')),
-                  const PopupMenuItem(value: 'edit', child: Text('Редактировать')),
+                  const PopupMenuItem(value: 'status', child: Text('Изменить статус',style: TextStyle(color: Colors.white))),
+                  const PopupMenuItem(value: 'time', child: Text('Изменить время',style: TextStyle(color: Colors.white))),
+                  const PopupMenuItem(value: 'edit', child: Text('Редактировать',style: TextStyle(color: Colors.white))),
                 ],
               ),
             ),
@@ -84,7 +87,7 @@ class VolunteerCard extends StatelessWidget {
         const SizedBox(width: 12),
         Text(
           volunteer.timeForSearch,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.bold,color: Colors.white),
         ),
       ],
     );

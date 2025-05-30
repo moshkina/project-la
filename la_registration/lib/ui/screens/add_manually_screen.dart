@@ -97,7 +97,7 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
           nickName: nickName,
           region: region,
           car: car,
-          status: "Active",
+          status: "Активный",
           notifyThatLeft: "false",
           timeForSearch: "", // Задайте нужные значения по умолчанию
           groupId: null // Если нужно, передайте значение groupId

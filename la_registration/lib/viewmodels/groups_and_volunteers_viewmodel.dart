@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../data/group.dart';
 import '../data/groups_dao.dart';
 import '../data/volunteer.dart';
@@ -97,6 +98,35 @@ class VolunteersViewModel extends ChangeNotifier {
   }
   notifyListeners();
 }
+  Future<void> markAllUnsentAsSent() async {
+    final unsent = _volunteers.where((v) => !v.isSent).toList();
+    for (final v in unsent) {
+      final updated = v.copyWith(isSent: true);
+      await _volunteersDao.updateVolunteer(updated);
+    }
+    await loadVolunteers();
+  }
+
+
+
+String formatVolunteers(List<Volunteer> volunteers) {
+  return volunteers.map((v) => '''
+ФИО: ${v.fullName}
+Позывной: ${v.callSign}
+Ник: ${v.nickName}
+Регион: ${v.region}
+Телефон: ${v.phoneNumber}
+Авто: ${v.car}
+Группа: ${v.groupId ?? '-'}
+Статус: ${v.status}
+Время: ${v.timeForSearch ?? ''}
+''').join('\n====================\n');
+}
+
+
+
+
+
 
   // Получение всех волонтеров
   Future<List<Volunteer>> getAllVolunteers() =>

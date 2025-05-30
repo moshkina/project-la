@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:la_registration/data/volunteer.dart';
-
+import 'package:la_registration/ui/widgets/volunteer_card.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:la_registration/viewmodels/groups_and_volunteers_viewmodel.dart';
@@ -9,6 +9,12 @@ import 'package:la_registration/ui/screens/group_tabs_screen.dart';
 import 'package:la_registration/ui/screens/barcode_scanner_screen.dart';
 import 'package:la_registration/ui/screens/add_manually_screen.dart';
 import 'package:la_registration/data/group.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+
+
 
 class TabbedMainScreen extends StatefulWidget {
   const TabbedMainScreen({super.key});
@@ -23,9 +29,41 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
   final TextEditingController _searchController = TextEditingController();
   bool _isSearchActive = false;
 
+  Future<String?> _pickTime(BuildContext context, String initialTime) async {
+    TimeOfDay initial = TimeOfDay.now();
+
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: initial,
+    );
+
+    if (picked != null) {
+      return picked.format(context);
+    }
+    return null;
+  }
+
+
+  
+Future<void> sendVolunteersToInfo(String message) async {
+  try {
+    final directory = await getTemporaryDirectory();
+    final file = File('${directory.path}/volunteers_report.txt');
+    await file.writeAsString(message);
+
+    await Share.shareXFiles(
+      [XFile(file.path)],
+      text: 'Отчёт по волонтёрам',
+    );
+  } catch (e) {
+    debugPrint('Ошибка при отправке: $e');
+  }
+}
+
   @override
   void initState() {
     super.initState();
+    final viewModel = Provider.of<VolunteersViewModel>(context, listen: false);
     _tabController = TabController(length: 3, vsync: this);
       Future.microtask(() =>
       Provider.of<VolunteersViewModel>(context, listen: false)
@@ -205,6 +243,7 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
   }
 
   Widget _buildNewVolunteersTab() {
+    final viewModel = context.read<VolunteersViewModel>();
     return Stack(
       children: [
         _buildVolunteersList(context, 'Новые'),
@@ -247,9 +286,24 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
                 child: const Icon(Icons.send, color: Colors.white),
                 label: 'Отправить новые инфоргу',
                 backgroundColor: const Color(0xFFF96800),
-                onTap: () {
-                  // Logic to send data
-                },
+                onTap: ()  async {
+                           
+    List<Volunteer> volunteers = [];
+    volunteers = viewModel.volunteers.where((v) => !v.isSent).toList();
+    print(volunteers);
+    if (volunteers.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Нет новых волонтёров для отправки.')),
+      );
+      return;
+    }
+
+    final message = viewModel.formatVolunteers(volunteers);
+    await sendVolunteersToInfo(message);
+
+    await viewModel.markAllUnsentAsSent();
+    setState(() {}); // обновим UI
+  },
               ),
             ],
           ),
@@ -432,45 +486,6 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
     );
   }
 
-  // Widget _buildVolunteersList(BuildContext context, String tabName) {
-  //   return Consumer<GroupsViewModel>(
-  //       builder: (context, groupsViewModel, child) {
-  //     return FutureBuilder<List<Group>>(
-  //       future: groupsViewModel.getAllGroups(), // Используем FutureBuilder
-  //       builder: (context, snapshot) {
-  //         if (snapshot.connectionState == ConnectionState.waiting) {
-  //           return const Center(child: CircularProgressIndicator());
-  //         }
-
-  //         if (snapshot.hasError) {
-  //           return Center(child: Text('Ошибка: ${snapshot.error}'));
-  //         }
-
-  //         final groups = snapshot.data ?? [];
-
-  //         if (groups.isEmpty) {
-  //           return Container(); // No data message removed
-  //         }
-
-  //         return ListView.builder(
-  //           itemCount: groups.length,
-  //           itemBuilder: (context, index) {
-  //             final group = groups[index];
-  //             return ListTile(
-  //               title: Text(
-  //                 group.numberOfGroup.toString(),
-  //                 style: const TextStyle(color: Colors.white),
-  //               ),
-  //               onTap: () {
-  //                 // Handle group item click
-  //               },
-  //             );
-  //           },
-  //         );
-  //       },
-  //     );
-  //   });
-  // }
   Widget _buildVolunteersList(BuildContext context, String tabName) {
   return Consumer<VolunteersViewModel>(
     builder: (context, viewModel, child) {
@@ -489,32 +504,34 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
       }
 
       return ListView.builder(
-        itemCount: volunteers.length,
-        itemBuilder: (context, index) {
-          final volunteer = volunteers[index];
-          return Card(
-            color: const Color(0xFF424242),
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: ListTile(
-              title: Text(
-                volunteer.fullName ?? 'Без имени',
-                style: const TextStyle(color: Colors.white),
-              ),
-              subtitle: Text(
-                'Группа: ${volunteer.groupId ?? 'не указано'}\nТелефон: ${volunteer.phoneNumber ?? 'не указан'}',
-                style: const TextStyle(color: Colors.white70),
-              ),
-              isThreeLine: true,
-              onTap: () {
-                // Опционально: открыть детальную информацию
-              },
-            ),
+  itemCount: volunteers.length,
+  itemBuilder: (context, index) {
+    final volunteer = volunteers[index];
+
+    return VolunteerCard(
+      volunteer: volunteer,
+      groupName: volunteer.groupId?.toString(), // или получить имя из GroupsViewModel
+      onEdit: () {
+        // Открыть экран редактирования волонтёра (опционально)
+      },
+      onChangeStatus: () async {
+        String newStatus = volunteer.status == 'Активный' ? 'Уехал' : 'Активный';
+        await context.read<VolunteersViewModel>().updateVolunteer(
+          volunteer.copyWith(status: newStatus),
+        );
+      },
+      onChangeTime: () async {
+        final newTime = await _pickTime(context, volunteer.timeForSearch);
+        if (newTime != null) {
+          await context.read<VolunteersViewModel>().updateVolunteer(
+            volunteer.copyWith(timeForSearch: newTime),
           );
-        },
-      );
+        }
+      },
+    );
+  },
+);
+
     },
   );
 }

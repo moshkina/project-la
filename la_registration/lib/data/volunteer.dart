@@ -57,6 +57,39 @@ class Volunteer {
     };
   }
 
+    Volunteer copyWith({
+    int? uniqueId,
+    int? index,
+    String? fullName,
+    String? callSign,
+    String? nickName,
+    String? region,
+    String? phoneNumber,
+    String? car,
+    bool? isSent,
+    String? status,
+    String? notifyThatLeft,
+    String? timeForSearch,
+    int? groupId,
+  }) {
+    return Volunteer(
+      uniqueId: uniqueId ?? this.uniqueId,
+      index: index ?? this.index,
+      fullName: fullName ?? this.fullName,
+      callSign: callSign ?? this.callSign,
+      nickName: nickName ?? this.nickName,
+      region: region ?? this.region,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      car: car ?? this.car,
+      isSent: isSent ?? this.isSent,
+      status: status ?? this.status,
+      notifyThatLeft: notifyThatLeft ?? this.notifyThatLeft,
+      timeForSearch: timeForSearch ?? this.timeForSearch,
+      groupId: groupId ?? this.groupId,
+    );
+  }
+
+
   factory Volunteer.fromJson(Map<String, dynamic> json) {
     return Volunteer(
       uniqueId: json['uniqueId'] as int?,
