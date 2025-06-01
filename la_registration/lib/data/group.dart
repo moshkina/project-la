@@ -19,7 +19,7 @@ import 'volunteer.dart'; // Импортируем модель волонтер
 @TypeConverters([Converter]) // Применяем TypeConverter для всего класса
 class Group {
   @PrimaryKey(autoGenerate: true)
-  final int id;
+  final int? id;
   final int numberOfGroup;
   final int elderOfGroupId; // Nullable field for elder
   final String navigators;
@@ -31,7 +31,7 @@ class Group {
   // final List<Volunteer>? searchers; // Добавляем поле для поиска волонтёров
 
   Group({
-    required this.id,
+    this.id,
     required this.numberOfGroup,
     required this.elderOfGroupId,
     this.navigators = '',

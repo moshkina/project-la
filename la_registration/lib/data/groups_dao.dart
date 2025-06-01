@@ -28,13 +28,13 @@ abstract class GroupsDao {
   Future<int> insertGroup(Group group);
 
   @delete
-  Future<void> deleteGroup(Group group);
+  Future<int> deleteGroup(Group group);
 
   @Query('DELETE FROM groups')
   Future<void> deleteAllGroups();
 
   @update
-  Future<void> updateGroup(Group group);
+  Future<int> updateGroup(Group group);
 
   @Query('SELECT * FROM groups WHERE id = :id')
   Future<Group?> getGroupById(int id);

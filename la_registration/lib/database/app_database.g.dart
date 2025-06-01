@@ -270,13 +270,14 @@ class _$GroupsDao extends GroupsDao {
   }
 
   @override
-  Future<void> updateGroup(Group group) async {
-    await _groupUpdateAdapter.update(group, OnConflictStrategy.abort);
+  Future<int> updateGroup(Group group) {
+    return _groupUpdateAdapter.updateAndReturnChangedRows(
+        group, OnConflictStrategy.abort);
   }
 
   @override
-  Future<void> deleteGroup(Group group) async {
-    await _groupDeletionAdapter.delete(group);
+  Future<int> deleteGroup(Group group) {
+    return _groupDeletionAdapter.deleteAndReturnChangedRows(group);
   }
 }
 

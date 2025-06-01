@@ -313,6 +313,7 @@ Future<void> sendVolunteersToInfo(String message) async {
   }
 
   Widget _buildSentVolunteersTab() {
+    final viewModel = context.read<VolunteersViewModel>();
     return Stack(
       children: [
         _buildVolunteersList(context, 'Отправленные'),
@@ -320,7 +321,23 @@ Future<void> sendVolunteersToInfo(String message) async {
           bottom: 16,
           right: 16,
           child: FloatingActionButton.extended(
-            onPressed: _showSendConfirmationDialog,
+            onPressed:() async {
+                           
+    List<Volunteer> volunteers = [];
+    volunteers = viewModel.volunteers.where((v) => v.status=="Уехал").toList();
+    print(volunteers);
+    if (volunteers.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Нет уехавших волонтёров для отправки.')),
+      );
+      return;
+    }
+
+    final message = viewModel.formatVolunteers(volunteers);
+    await sendVolunteersToInfo(message);
+
+    setState(() {}); // обновим UI
+  },
             backgroundColor: const Color(0xFFF96800),
             icon: const Icon(Icons.send),
             label: const Text('Отправить инфоргу тех кто уехал'),
@@ -410,42 +427,6 @@ Future<void> sendVolunteersToInfo(String message) async {
     );
   }
 
-  void _showSendConfirmationDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF303030),
-          title: const Text(
-            'Подтвердите отправку инфоргу',
-            style: TextStyle(color: Colors.white),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text(
-                'Отмена',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                // Send confirmation logic
-                Navigator.pop(context);
-              },
-              child: const Text(
-                'Отправить',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   void _showDeleteConfirmationDialog() {
     showDialog(
       context: context,
@@ -471,10 +452,15 @@ Future<void> sendVolunteersToInfo(String message) async {
               ),
             ),
             TextButton(
-              onPressed: () {
-                // Logic for deleting all entries
-                Navigator.pop(context);
-              },
+              onPressed: () async {
+    final volunteersViewModel = Provider.of<VolunteersViewModel>(context, listen: false);
+    final groupsViewModel = Provider.of<GroupsViewModel>(context, listen: false);
+
+    await volunteersViewModel.deleteAllVolunteers();
+    await groupsViewModel.deleteAllGroups();
+
+    Navigator.pop(context);
+  },
               child: const Text(
                 'Удалить',
                 style: TextStyle(color: Colors.white),

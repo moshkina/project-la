@@ -7,13 +7,7 @@ import '../database/database_helper.dart';
 class DatabaseRepository {
   static late MainDatabase _database;
 
-  // Инициализация базы данных
-  // static Future<void> initDatabase() async {
-  //   _database ??=
-  //       await $FloorMainDatabase.databaseBuilder('main_database.db').build();
-  // }
-
-  // Геттеры для DAO
+ 
   static GroupsDao get groupsDao => _database.groupsDao;
   static VolunteersDao get volunteersDao => _database.volunteersDao;
   static MainDao get mainDao => _database.mainDao;

@@ -10,7 +10,8 @@ class GroupsViewModel extends ChangeNotifier {
   final GroupsDao _groupsDao;
 
   GroupsViewModel(this._groupsDao);
-
+  List<Group> _groups = [];
+  List<Group> get groups => _groups;
   Future<List<Group>> getAllGroups() => _groupsDao.getAllGroups();
 
   Future<List<Group>> getGroupByCallsignNotArchived(String groupCallsign) {
@@ -52,19 +53,22 @@ class GroupsViewModel extends ChangeNotifier {
     return _groupsDao.getGroupsByCallsignArchived(callsign);
   }
 
-  Future<void> insertGroup(Group group) async {
-    await _groupsDao.insertGroup(group);
+  Future<int> insertGroup(Group group) async {
+    final id = await _groupsDao.insertGroup(group);
     notifyListeners();
+    return id;
   }
 
-  Future<void> updateGroup(Group group) async {
-    await _groupsDao.updateGroup(group);
+  Future<int> updateGroup(Group group) async {
+    final id = await _groupsDao.updateGroup(group);
     notifyListeners();
+    return id;
   }
 
-  Future<void> deleteGroup(Group group) async {
-    await _groupsDao.deleteGroup(group);
+  Future<int> deleteGroup(Group group) async {
+    final id= await _groupsDao.deleteGroup(group);
     notifyListeners();
+    return id;
   }
 
   Future<void> deleteAllGroups() async {
@@ -125,6 +129,14 @@ String formatVolunteers(List<Volunteer> volunteers) {
 
 
 
+  Future<void> sendDepartedVolunteersToInformant() async {
+    final departedVolunteers = _volunteers
+        .where((v) => v.status == 'уехал')
+        .toList();
+
+
+    notifyListeners(); // обновляет UI
+  }
 
 
 
