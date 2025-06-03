@@ -10,10 +10,19 @@ class GroupCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Colors.grey[900],
       child: ListTile(
-        title: Text('Group ${group.numberOfGroup}'),
-        // subtitle: Text('Members: ${group.membersCount}'),
+        title: Text(
+          '${group.groupCallsign.getGroupCallsignAsString()} №${group.numberOfGroup}',
+              style: const TextStyle(color: Colors.white),
+              ),
+                subtitle: Text(
+                'Задача: ${group.navigators}',
+             style: const TextStyle(color: Colors.white70),
+           ),
         trailing: PopupMenuButton<String>(
+          icon:Icon(Icons.arrow_drop_down_outlined, color:Colors.white),
+          color:Colors.black,
           onSelected: (value) {
             if (value == 'archive' && !isArchived) {
               // Логика архивации
@@ -23,9 +32,9 @@ class GroupCard extends StatelessWidget {
             }
           },
           itemBuilder: (context) => [
-            const PopupMenuItem(value: 'details', child: Text('View Details')),
+            const PopupMenuItem(value: 'details', child: Text('View Details',style: TextStyle(color: Colors.white))),
             if (!isArchived)
-              const PopupMenuItem(value: 'archive', child: Text('Archive')),
+              const PopupMenuItem(value: 'archive', child: Text('Archive',style: TextStyle(color: Colors.white))),
           ],
         ),
       ),
