@@ -63,7 +63,8 @@ Future<void> sendVolunteersToInfo(String message) async {
   @override
   void initState() {
     super.initState();
-    final viewModel = Provider.of<VolunteersViewModel>(context, listen: false);
+    final viewModel = Provider.of<VolunteersViewModel>(context, listen: false);     
+    final groupsViewModel = Provider.of<GroupsViewModel>(context, listen: false);
     _tabController = TabController(length: 3, vsync: this);
       Future.microtask(() =>
       Provider.of<VolunteersViewModel>(context, listen: false)

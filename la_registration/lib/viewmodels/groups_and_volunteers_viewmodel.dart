@@ -13,6 +13,25 @@ class GroupsViewModel extends ChangeNotifier {
   List<Group> _groups = [];
   List<Group> get groups => _groups;
   Future<List<Group>> getAllGroups() => _groupsDao.getAllGroups();
+  final Map<GroupCallsigns, List<Group>> _groupsByCallsign = {};
+ 
+
+
+
+  List<Group> getGroupsForCallsign(GroupCallsigns callsign) {
+  return _groupsByCallsign[callsign] ?? [];
+}
+
+
+Future<void> loadGroupsByCallsign(GroupCallsigns callsign) async {
+  final groups = await _groupsDao.getGroupsByCallsignNotArchived(callsign);
+  _groupsByCallsign[callsign] = groups;
+  notifyListeners();
+}
+
+
+
+
 
   Future<List<Group>> getGroupByCallsignNotArchived(String groupCallsign) {
     final callsign = GroupCallsigns.fromString(groupCallsign);

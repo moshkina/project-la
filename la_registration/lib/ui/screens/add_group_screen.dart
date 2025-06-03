@@ -90,11 +90,11 @@ class AddNewGroupScreenState extends State<AddNewGroupScreen> {
 
   final groupsViewModel = context.read<GroupsViewModel>();
   final volunteersViewModel = context.read<VolunteersViewModel>();
-
+  final groups=groupsViewModel.groups;
   // Создаём или обновляем группу
   final group = Group(
     id: widget.isGroupEdit ? widget.groupId : null,
-    numberOfGroup: 1, // или вычислить автоматически, если нужно
+    numberOfGroup: groups.length+1, // или вычислить автоматически, если нужно
     dateOfCreation: DateTime.now().toIso8601String(),
     groupCallsign: widget.groupCallsign,
     elderOfGroupId: elder!.uniqueId!,

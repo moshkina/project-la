@@ -77,7 +77,11 @@ class BarCodeScannerScreenState extends State<BarCodeScannerScreen> {
       List<String> scanResultArray = scanResult.split("\n");
 
       String fullName = scanResultArray[0];
-      String phoneNumber = scanResultArray[scanResultArray.length - 1];
+      String callSign = scanResultArray[1];
+      String nickName = scanResultArray[2];
+      String region = scanResultArray[3];
+      String phoneNumber = scanResultArray[4];
+      String car= scanResultArray[5] ?? "";
 
       // Создание нового объекта Volunteer с обязательными полями
       final volunteer = Volunteer(
@@ -85,11 +89,11 @@ class BarCodeScannerScreenState extends State<BarCodeScannerScreen> {
         index: 0, // Используем значение по умолчанию для index
         fullName: fullName,
         phoneNumber: phoneNumber,
-        callSign: "Default",
-        nickName: "Default",
-        region: "Unknown",
-        car: "None",
-        status: "Active", // Статус по умолчанию
+        callSign: callSign,
+        nickName: nickName,
+        region: region,
+        car: car,
+        status: "Активный", // Статус по умолчанию
         isSent: false, // Значение по умолчанию
         notifyThatLeft: "false", // Значение по умолчанию
         timeForSearch: "", // Значение по умолчанию
