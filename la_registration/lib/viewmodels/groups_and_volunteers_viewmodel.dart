@@ -14,24 +14,16 @@ class GroupsViewModel extends ChangeNotifier {
   List<Group> get groups => _groups;
   Future<List<Group>> getAllGroups() => _groupsDao.getAllGroups();
   final Map<GroupCallsigns, List<Group>> _groupsByCallsign = {};
- 
-
-
 
   List<Group> getGroupsForCallsign(GroupCallsigns callsign) {
-  return _groupsByCallsign[callsign] ?? [];
-}
+    return _groupsByCallsign[callsign] ?? [];
+  }
 
-
-Future<void> loadGroupsByCallsign(GroupCallsigns callsign) async {
-  final groups = await _groupsDao.getGroupsByCallsignNotArchived(callsign);
-  _groupsByCallsign[callsign] = groups;
-  notifyListeners();
-}
-
-
-
-
+  Future<void> loadGroupsByCallsign(GroupCallsigns callsign) async {
+    final groups = await _groupsDao.getGroupsByCallsignNotArchived(callsign);
+    _groupsByCallsign[callsign] = groups;
+    notifyListeners();
+  }
 
   Future<List<Group>> getGroupByCallsignNotArchived(String groupCallsign) {
     final callsign = GroupCallsigns.fromString(groupCallsign);
@@ -85,13 +77,13 @@ Future<void> loadGroupsByCallsign(GroupCallsigns callsign) async {
   }
 
   Future<int> deleteGroup(Group group) async {
-    final id= await _groupsDao.deleteGroup(group);
+    final id = await _groupsDao.deleteGroup(group);
     notifyListeners();
     return id;
   }
 
-  Future<void> deleteAllGroups() async {
-    await _groupsDao.deleteAllGroups();
+  Future<void> deleteArchivedGroups() async {
+    await _groupsDao.deleteArchivedGroups();
     notifyListeners();
   }
 
@@ -113,14 +105,15 @@ class VolunteersViewModel extends ChangeNotifier {
   VolunteersViewModel(this._volunteersDao) {
     loadVolunteers();
   }
- Future<void> loadVolunteers() async {
-  _volunteers = await _volunteersDao.getAllVolunteers();
-  print("Загружено волонтёров: ${_volunteers.length}");
-  for (var v in _volunteers) {
-    print(v);
+  Future<void> loadVolunteers() async {
+    _volunteers = await _volunteersDao.getAllVolunteers();
+    print("Загружено волонтёров: ${_volunteers.length}");
+    for (var v in _volunteers) {
+      print(v);
+    }
+    notifyListeners();
   }
-  notifyListeners();
-}
+
   Future<void> markAllUnsentAsSent() async {
     final unsent = _volunteers.where((v) => !v.isSent).toList();
     for (final v in unsent) {
@@ -130,10 +123,8 @@ class VolunteersViewModel extends ChangeNotifier {
     await loadVolunteers();
   }
 
-
-
-String formatVolunteers(List<Volunteer> volunteers) {
-  return volunteers.map((v) => '''
+  String formatVolunteers(List<Volunteer> volunteers) {
+    return volunteers.map((v) => '''
 ФИО: ${v.fullName}
 Позывной: ${v.callSign}
 Ник: ${v.nickName}
@@ -144,20 +135,14 @@ String formatVolunteers(List<Volunteer> volunteers) {
 Статус: ${v.status}
 Время: ${v.timeForSearch ?? ''}
 ''').join('\n====================\n');
-}
-
-
+  }
 
   Future<void> sendDepartedVolunteersToInformant() async {
-    final departedVolunteers = _volunteers
-        .where((v) => v.status == 'уехал')
-        .toList();
-
+    final departedVolunteers =
+        _volunteers.where((v) => v.status == 'уехал').toList();
 
     notifyListeners(); // обновляет UI
   }
-
-
 
   // Получение всех волонтеров
   Future<List<Volunteer>> getAllVolunteers() =>

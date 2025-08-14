@@ -229,8 +229,9 @@ class _$GroupsDao extends GroupsDao {
   }
 
   @override
-  Future<void> deleteAllGroups() async {
-    await _queryAdapter.queryNoReturn('DELETE FROM groups');
+  Future<void> deleteArchivedGroups() async {
+    await _queryAdapter
+        .queryNoReturn('DELETE FROM groups WHERE archived = "true"');
   }
 
   @override

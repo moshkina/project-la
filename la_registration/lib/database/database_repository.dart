@@ -6,8 +6,6 @@ import '../database/database_helper.dart';
 
 class DatabaseRepository {
   static late MainDatabase _database;
-
- 
   static GroupsDao get groupsDao => _database.groupsDao;
   static VolunteersDao get volunteersDao => _database.volunteersDao;
   static MainDao get mainDao => _database.mainDao;

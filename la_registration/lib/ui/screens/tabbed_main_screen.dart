@@ -14,8 +14,6 @@ import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 
-
-
 class TabbedMainScreen extends StatefulWidget {
   const TabbedMainScreen({super.key});
 
@@ -43,32 +41,31 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
     return null;
   }
 
+  Future<void> sendVolunteersToInfo(String message) async {
+    try {
+      final directory = await getTemporaryDirectory();
+      final file = File('${directory.path}/volunteers_report.txt');
+      await file.writeAsString(message);
 
-  
-Future<void> sendVolunteersToInfo(String message) async {
-  try {
-    final directory = await getTemporaryDirectory();
-    final file = File('${directory.path}/volunteers_report.txt');
-    await file.writeAsString(message);
-
-    await Share.shareXFiles(
-      [XFile(file.path)],
-      text: 'Отчёт по волонтёрам',
-    );
-  } catch (e) {
-    debugPrint('Ошибка при отправке: $e');
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: 'Отчёт по волонтёрам',
+      );
+    } catch (e) {
+      debugPrint('Ошибка при отправке: $e');
+    }
   }
-}
 
   @override
   void initState() {
     super.initState();
-    final viewModel = Provider.of<VolunteersViewModel>(context, listen: false);     
-    final groupsViewModel = Provider.of<GroupsViewModel>(context, listen: false);
+    final viewModel = Provider.of<VolunteersViewModel>(context, listen: false);
+    final groupsViewModel =
+        Provider.of<GroupsViewModel>(context, listen: false);
     _tabController = TabController(length: 3, vsync: this);
-      Future.microtask(() =>
-      Provider.of<VolunteersViewModel>(context, listen: false)
-          .loadVolunteers());
+    Future.microtask(() =>
+        Provider.of<VolunteersViewModel>(context, listen: false)
+            .loadVolunteers());
   }
 
   @override
@@ -287,24 +284,25 @@ Future<void> sendVolunteersToInfo(String message) async {
                 child: const Icon(Icons.send, color: Colors.white),
                 label: 'Отправить новые инфоргу',
                 backgroundColor: const Color(0xFFF96800),
-                onTap: ()  async {
-                           
-    List<Volunteer> volunteers = [];
-    volunteers = viewModel.volunteers.where((v) => !v.isSent).toList();
-    print(volunteers);
-    if (volunteers.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Нет новых волонтёров для отправки.')),
-      );
-      return;
-    }
+                onTap: () async {
+                  List<Volunteer> volunteers = [];
+                  volunteers =
+                      viewModel.volunteers.where((v) => !v.isSent).toList();
+                  print(volunteers);
+                  if (volunteers.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text('Нет новых волонтёров для отправки.')),
+                    );
+                    return;
+                  }
 
-    final message = viewModel.formatVolunteers(volunteers);
-    await sendVolunteersToInfo(message);
+                  final message = viewModel.formatVolunteers(volunteers);
+                  await sendVolunteersToInfo(message);
 
-    await viewModel.markAllUnsentAsSent();
-    setState(() {}); // обновим UI
-  },
+                  await viewModel.markAllUnsentAsSent();
+                  setState(() {}); // обновим UI
+                },
               ),
             ],
           ),
@@ -322,23 +320,25 @@ Future<void> sendVolunteersToInfo(String message) async {
           bottom: 16,
           right: 16,
           child: FloatingActionButton.extended(
-            onPressed:() async {
-                           
-    List<Volunteer> volunteers = [];
-    volunteers = viewModel.volunteers.where((v) => v.status=="Уехал").toList();
-    print(volunteers);
-    if (volunteers.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Нет уехавших волонтёров для отправки.')),
-      );
-      return;
-    }
+            onPressed: () async {
+              List<Volunteer> volunteers = [];
+              volunteers = viewModel.volunteers
+                  .where((v) => v.status == "Уехал")
+                  .toList();
+              print(volunteers);
+              if (volunteers.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text('Нет уехавших волонтёров для отправки.')),
+                );
+                return;
+              }
 
-    final message = viewModel.formatVolunteers(volunteers);
-    await sendVolunteersToInfo(message);
+              final message = viewModel.formatVolunteers(volunteers);
+              await sendVolunteersToInfo(message);
 
-    setState(() {}); // обновим UI
-  },
+              setState(() {}); // обновим UI
+            },
             backgroundColor: const Color(0xFFF96800),
             icon: const Icon(Icons.send),
             label: const Text('Отправить инфоргу тех кто уехал'),
@@ -454,14 +454,16 @@ Future<void> sendVolunteersToInfo(String message) async {
             ),
             TextButton(
               onPressed: () async {
-    final volunteersViewModel = Provider.of<VolunteersViewModel>(context, listen: false);
-    final groupsViewModel = Provider.of<GroupsViewModel>(context, listen: false);
+                final volunteersViewModel =
+                    Provider.of<VolunteersViewModel>(context, listen: false);
+                final groupsViewModel =
+                    Provider.of<GroupsViewModel>(context, listen: false);
 
-    await volunteersViewModel.deleteAllVolunteers();
-    await groupsViewModel.deleteAllGroups();
+                await volunteersViewModel.deleteAllVolunteers();
+                await groupsViewModel.deleteArchivedGroups();
 
-    Navigator.pop(context);
-  },
+                Navigator.pop(context);
+              },
               child: const Text(
                 'Удалить',
                 style: TextStyle(color: Colors.white),
@@ -474,53 +476,54 @@ Future<void> sendVolunteersToInfo(String message) async {
   }
 
   Widget _buildVolunteersList(BuildContext context, String tabName) {
-  return Consumer<VolunteersViewModel>(
-    builder: (context, viewModel, child) {
-      List<Volunteer> volunteers = [];
+    return Consumer<VolunteersViewModel>(
+      builder: (context, viewModel, child) {
+        List<Volunteer> volunteers = [];
 
-      switch (tabName) {
-        case 'Новые':
-          volunteers = viewModel.volunteers.where((v) => !v.isSent).toList();
-          break;
-        case 'Отправленные':
-          volunteers = viewModel.volunteers.where((v) => v.isSent).toList();
-          break;
-        case 'Все':
-          volunteers = viewModel.volunteers;
-          break;
-      }
+        switch (tabName) {
+          case 'Новые':
+            volunteers = viewModel.volunteers.where((v) => !v.isSent).toList();
+            break;
+          case 'Отправленные':
+            volunteers = viewModel.volunteers.where((v) => v.isSent).toList();
+            break;
+          case 'Все':
+            volunteers = viewModel.volunteers;
+            break;
+        }
 
-      return ListView.builder(
-  itemCount: volunteers.length,
-  itemBuilder: (context, index) {
-    final volunteer = volunteers[index];
+        return ListView.builder(
+          itemCount: volunteers.length,
+          itemBuilder: (context, index) {
+            final volunteer = volunteers[index];
 
-    return VolunteerCard(
-      volunteer: volunteer,
-      groupName: volunteer.groupId?.toString(), // или получить имя из GroupsViewModel
-      onEdit: () {
-        // Открыть экран редактирования волонтёра (опционально)
-      },
-      onChangeStatus: () async {
-        String newStatus = volunteer.status == 'Активный' ? 'Уехал' : 'Активный';
-        await context.read<VolunteersViewModel>().updateVolunteer(
-          volunteer.copyWith(status: newStatus),
+            return VolunteerCard(
+              volunteer: volunteer,
+              groupName: volunteer.groupId
+                  ?.toString(), // или получить имя из GroupsViewModel
+              onEdit: () {
+                // Открыть экран редактирования волонтёра (опционально)
+              },
+              onChangeStatus: () async {
+                String newStatus =
+                    volunteer.status == 'Активный' ? 'Уехал' : 'Активный';
+                await context.read<VolunteersViewModel>().updateVolunteer(
+                      volunteer.copyWith(status: newStatus),
+                    );
+              },
+              onChangeTime: () async {
+                final newTime =
+                    await _pickTime(context, volunteer.timeForSearch);
+                if (newTime != null) {
+                  await context.read<VolunteersViewModel>().updateVolunteer(
+                        volunteer.copyWith(timeForSearch: newTime),
+                      );
+                }
+              },
+            );
+          },
         );
       },
-      onChangeTime: () async {
-        final newTime = await _pickTime(context, volunteer.timeForSearch);
-        if (newTime != null) {
-          await context.read<VolunteersViewModel>().updateVolunteer(
-            volunteer.copyWith(timeForSearch: newTime),
-          );
-        }
-      },
     );
-  },
-);
-
-    },
-  );
-}
-
+  }
 }

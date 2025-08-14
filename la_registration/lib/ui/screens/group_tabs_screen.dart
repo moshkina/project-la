@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:la_registration/data/group_callsign.dart';
-import 'active_groups_screen.dart';
-import 'archive_groups_screen.dart';
+import 'package:la_registration/ui/screens/active_groups_screen.dart';
+import 'package:la_registration/ui/screens/archive_groups_screen.dart';
 
 class GroupTabsScreen extends StatelessWidget {
   final String groupCallsign;

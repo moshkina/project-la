@@ -1,3 +1,4 @@
 {
-  "cmake.sourceDirectory": "D:/LizaAlert/project-la/la_registration/windows"
+  "cmake.sourceDirectory": "D:/LizaAlert/project-la/la_registration/linux",
+  "dart.flutterSdkPath": ".fvm/versions/3.22.3"
 }

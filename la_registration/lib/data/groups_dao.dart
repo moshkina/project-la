@@ -30,8 +30,9 @@ abstract class GroupsDao {
   @delete
   Future<int> deleteGroup(Group group);
 
-  @Query('DELETE FROM groups')
-  Future<void> deleteAllGroups();
+  @Query(
+      'DELETE FROM groups WHERE groupCallsign = :callsign AND archived = "true"')
+  Future<void> deleteArchivedGroups();
 
   @update
   Future<int> updateGroup(Group group);
