@@ -20,12 +20,15 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const TabbedMainScreen(),
         '/counter': (context) => const CounterScreen(),
-        '/add_group': (context) => const AddNewGroupScreen(
-              groupId: 0,
-              groupCallsign:
-                  GroupCallsigns.bort, 
-              isGroupEdit: false,
-            ),
+        '/add_group': (context) {
+  final args = ModalRoute.of(context)?.settings.arguments as GroupCallsigns?;
+  return AddNewGroupScreen(
+    groupId: 0,
+    groupCallsign: args ?? GroupCallsigns.kinolog, // дефолт на всякий случай
+    isGroupEdit: false,
+  );
+},
+
         '/group_details': (context) => const GroupDetailScreen(
               groupId: 1,
               isGroupArchive: false,
