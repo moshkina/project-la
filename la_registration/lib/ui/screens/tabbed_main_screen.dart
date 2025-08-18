@@ -13,6 +13,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'dart:async';
 
 class TabbedMainScreen extends StatefulWidget {
   const TabbedMainScreen({super.key});
@@ -26,15 +27,22 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   bool _isSearchActive = false;
+  Timer? _searchDebounce;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _tabController.dispose();
+    _searchDebounce?.cancel();
+    super.dispose();
+  }
 
   Future<String?> _pickTime(BuildContext context, String initialTime) async {
     TimeOfDay initial = TimeOfDay.now();
-
     final picked = await showTimePicker(
       context: context,
       initialTime: initial,
     );
-
     if (picked != null) {
       return picked.format(context);
     }
@@ -46,7 +54,6 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
       final directory = await getTemporaryDirectory();
       final file = File('${directory.path}/volunteers_report.txt');
       await file.writeAsString(message);
-
       await Share.shareXFiles(
         [XFile(file.path)],
         text: 'Отчёт по волонтёрам',
@@ -59,13 +66,19 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
   @override
   void initState() {
     super.initState();
-    final viewModel = Provider.of<VolunteersViewModel>(context, listen: false);
-    final groupsViewModel =
-        Provider.of<GroupsViewModel>(context, listen: false);
     _tabController = TabController(length: 3, vsync: this);
-    Future.microtask(() =>
-        Provider.of<VolunteersViewModel>(context, listen: false)
-            .loadVolunteers());
+    Future.microtask(() {
+      Provider.of<VolunteersViewModel>(context, listen: false).loadVolunteers();
+    });
+  }
+
+  void _onSearchChanged(String value) {
+    if (_searchDebounce?.isActive ?? false) _searchDebounce?.cancel();
+
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      Provider.of<VolunteersViewModel>(context, listen: false)
+          .setSearchQuery(value);
+    });
   }
 
   @override
@@ -75,15 +88,23 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
         title: _isSearchActive
             ? TextField(
                 controller: _searchController,
+                autofocus: true,
                 style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  hintText: 'Поиск...',
-                  hintStyle: TextStyle(color: Colors.white60),
+                decoration: InputDecoration(
+                  hintText: 'Поиск ...',
+                  hintStyle: const TextStyle(color: Colors.white60),
                   border: InputBorder.none,
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, color: Colors.white60),
+                          onPressed: () {
+                            _searchController.clear();
+                            _onSearchChanged('');
+                          },
+                        )
+                      : null,
                 ),
-                onChanged: (value) {
-                  // Add logic for filtering the list
-                },
+                onChanged: _onSearchChanged,
               )
             : const Text(
                 'Волонтёры',
@@ -95,9 +116,7 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
           indicatorWeight: 3.0,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white,
-          labelStyle: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
           tabs: const [
             Tab(text: 'Новые'),
             Tab(text: 'Отправленные'),
@@ -135,6 +154,16 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
     );
   }
 
+  void _toggleSearch() {
+    setState(() {
+      _isSearchActive = !_isSearchActive;
+      if (!_isSearchActive) {
+        _searchController.clear();
+        _onSearchChanged('');
+      }
+    });
+  }
+
   Widget _buildDrawer() {
     return Drawer(
       child: Container(
@@ -142,98 +171,66 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
         child: ListView(
           children: <Widget>[
             DrawerHeader(
-              decoration: const BoxDecoration(
-                color: Colors.transparent,
-              ),
+              decoration: const BoxDecoration(color: Colors.transparent),
               child: Image.asset(
                 'assets/images/liza_alert_preview.jpg',
                 fit: BoxFit.cover,
                 width: double.infinity,
-                height: MediaQuery.of(context).size.height,
               ),
             ),
             ListTile(
-              title: const Text(
-                'Имя поиска',
-                style: TextStyle(color: Colors.white),
-              ),
+              title: const Text('Имя поиска',
+                  style: TextStyle(color: Colors.white)),
               onTap: _showSearchNameDialog,
             ),
             ListTile(
-              title: const Text(
-                'Волонтёры',
-                style: TextStyle(color: Colors.white),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-              },
+              title: const Text('Волонтёры',
+                  style: TextStyle(color: Colors.white)),
+              onTap: () => Navigator.pop(context),
             ),
             const Divider(color: Colors.grey),
             Container(
-              color: Colors.transparent,
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: Text(
-                  'Группы',
-                  style: TextStyle(
-                    color: Color.fromARGB(255, 188, 188, 188),
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: const Text(
+                'Группы',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 188, 188, 188),
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            ...GroupCallsigns.values.map((groupCallsign) {
-              return ListTile(
-                title: Text(
-                  groupCallsign.getGroupCallsignAsString(),
-                  style: const TextStyle(color: Colors.white),
-                ),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => GroupTabsScreen(
-                        groupCallsign: groupCallsign.getGroupCallsignAsString(),
+            ...GroupCallsigns.values.map((groupCallsign) => ListTile(
+                  title: Text(
+                    groupCallsign.getGroupCallsignAsString(),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => GroupTabsScreen(
+                          groupCallsign:
+                              groupCallsign.getGroupCallsignAsString(),
+                        ),
                       ),
-                    ),
-                  );
-                },
-              );
-            }),
+                    );
+                  },
+                )),
             const Divider(color: Colors.grey),
             Container(
-              color: Colors.transparent,
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: Text(
-                  'База данных',
-                  style: TextStyle(
-                    color: Color.fromARGB(255, 188, 188, 188),
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: const Text(
+                'База данных',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 188, 188, 188),
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            // ListTile(
-            //   title: const Text(
-            //     'Сохранить и переслать',
-            //     style: TextStyle(color: Colors.white),
-            //   ),
-            //   onTap: () {
-            //     // Save and send data logic
-            //   },
-            // ),
-            // ListTile(
-            //   title: const Text(
-            //     'Загрузить базу данных',
-            //     style: TextStyle(color: Colors.white),
-            //   ),
-            //   onTap: () {
-            //     // Load database logic
-            //   },
-            // ),
           ],
         ),
       ),
@@ -257,51 +254,42 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
                 child: const Icon(Icons.edit, color: Colors.white),
                 label: 'Добавить вручную',
                 backgroundColor: const Color(0xFFF96800),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          const AddManuallyScreen(volunteerId: 0, size: '5'),
-                    ),
-                  );
-                },
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        const AddManuallyScreen(volunteerId: 0, size: '5'),
+                  ),
+                ),
               ),
               SpeedDialChild(
                 child: const Icon(Icons.qr_code_scanner, color: Colors.white),
                 label: 'Добавить с помощью QRScanner',
                 backgroundColor: const Color(0xFFF96800),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const BarCodeScannerScreen(),
-                    ),
-                  );
-                },
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const BarCodeScannerScreen(),
+                  ),
+                ),
               ),
               SpeedDialChild(
                 child: const Icon(Icons.send, color: Colors.white),
                 label: 'Отправить новые инфоргу',
                 backgroundColor: const Color(0xFFF96800),
                 onTap: () async {
-                  List<Volunteer> volunteers = [];
-                  volunteers =
+                  final volunteers =
                       viewModel.volunteers.where((v) => !v.isSent).toList();
-                  print(volunteers);
                   if (volunteers.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
+                      const SnackBar(
                           content: Text('Нет новых волонтёров для отправки.')),
                     );
                     return;
                   }
-
-                  final message = viewModel.formatVolunteers(volunteers);
-                  await sendVolunteersToInfo(message);
-
+                  await sendVolunteersToInfo(
+                      viewModel.formatVolunteers(volunteers));
                   await viewModel.markAllUnsentAsSent();
-                  setState(() {}); // обновим UI
                 },
               ),
             ],
@@ -321,23 +309,18 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
           right: 16,
           child: FloatingActionButton.extended(
             onPressed: () async {
-              List<Volunteer> volunteers = [];
-              volunteers = viewModel.volunteers
+              final volunteers = viewModel.volunteers
                   .where((v) => v.status == "Уехал")
                   .toList();
-              print(volunteers);
               if (volunteers.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
+                  const SnackBar(
                       content: Text('Нет уехавших волонтёров для отправки.')),
                 );
                 return;
               }
-
-              final message = viewModel.formatVolunteers(volunteers);
-              await sendVolunteersToInfo(message);
-
-              setState(() {}); // обновим UI
+              await sendVolunteersToInfo(
+                  viewModel.formatVolunteers(volunteers));
             },
             backgroundColor: const Color(0xFFF96800),
             icon: const Icon(Icons.send),
@@ -365,113 +348,70 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
     );
   }
 
-  void _toggleSearch() {
-    setState(() {
-      _isSearchActive = !_isSearchActive;
-      if (!_isSearchActive) {
-        _searchController.clear(); // Clear search field when closing
-      }
-    });
-  }
-
   void _showSearchNameDialog() {
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF303030),
-          title: const Text(
-            'Введите имя поиска',
-            style: TextStyle(color: Colors.white),
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF303030),
+        title: const Text('Введите имя поиска',
+            style: TextStyle(color: Colors.white)),
+        content: const TextField(
+          decoration: InputDecoration(
+            hintText: 'Имя поиска',
+            hintStyle: TextStyle(color: Colors.grey),
+            focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.white)),
+            enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.white)),
           ),
-          content: const TextField(
-            decoration: InputDecoration(
-              hintText: 'Имя поиска',
-              hintStyle: TextStyle(color: Colors.grey),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.white),
-              ),
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.white),
-              ),
-            ),
-            style: TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.white),
+        ),
+        actions: [
+          TextButton(
+            style:
+                TextButton.styleFrom(backgroundColor: const Color(0xFFF96800)),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Отмена', style: TextStyle(color: Colors.white)),
           ),
-          actions: [
-            TextButton(
-              style: TextButton.styleFrom(
-                backgroundColor: const Color(0xFFF96800),
-              ),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text(
-                'Отмена',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-            TextButton(
-              style: TextButton.styleFrom(
-                backgroundColor: const Color(0xFFF96800),
-              ),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text(
-                'ОК',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        );
-      },
+          TextButton(
+            style:
+                TextButton.styleFrom(backgroundColor: const Color(0xFFF96800)),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('ОК', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
     );
   }
 
   void _showDeleteConfirmationDialog() {
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF303030),
-          title: const Text(
-            'Предупреждение',
-            style: TextStyle(color: Colors.white),
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF303030),
+        title:
+            const Text('Предупреждение', style: TextStyle(color: Colors.white)),
+        content: const Text('Подтвердите удаление всех записей',
+            style: TextStyle(color: Colors.white)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Отмена', style: TextStyle(color: Colors.white)),
           ),
-          content: const Text(
-            'Подтвердите удаление всех записей',
-            style: TextStyle(color: Colors.white),
+          TextButton(
+            onPressed: () async {
+              final volunteersViewModel =
+                  Provider.of<VolunteersViewModel>(context, listen: false);
+              final groupsViewModel =
+                  Provider.of<GroupsViewModel>(context, listen: false);
+              await volunteersViewModel.deleteAllVolunteers();
+              await groupsViewModel.deleteArchivedGroups();
+              Navigator.pop(context);
+            },
+            child: const Text('Удалить', style: TextStyle(color: Colors.white)),
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text(
-                'Отмена',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-            TextButton(
-              onPressed: () async {
-                final volunteersViewModel =
-                    Provider.of<VolunteersViewModel>(context, listen: false);
-                final groupsViewModel =
-                    Provider.of<GroupsViewModel>(context, listen: false);
-
-                await volunteersViewModel.deleteAllVolunteers();
-                await groupsViewModel.deleteArchivedGroups();
-
-                Navigator.pop(context);
-              },
-              child: const Text(
-                'Удалить',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        );
-      },
+        ],
+      ),
     );
   }
 
@@ -496,28 +436,32 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
           itemCount: volunteers.length,
           itemBuilder: (context, index) {
             final volunteer = volunteers[index];
-
             return VolunteerCard(
               volunteer: volunteer,
-              groupName: volunteer.groupId
-                  ?.toString(), // или получить имя из GroupsViewModel
+              groupName: volunteer.groupId?.toString(),
               onEdit: () {
-                // Открыть экран редактирования волонтёра (опционально)
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddManuallyScreen(
+                      volunteerId: volunteer.index,
+                      size: '5',
+                    ),
+                  ),
+                );
               },
               onChangeStatus: () async {
-                String newStatus =
+                final newStatus =
                     volunteer.status == 'Активный' ? 'Уехал' : 'Активный';
-                await context.read<VolunteersViewModel>().updateVolunteer(
-                      volunteer.copyWith(status: newStatus),
-                    );
+                await viewModel
+                    .updateVolunteer(volunteer.copyWith(status: newStatus));
               },
               onChangeTime: () async {
                 final newTime =
                     await _pickTime(context, volunteer.timeForSearch);
                 if (newTime != null) {
-                  await context.read<VolunteersViewModel>().updateVolunteer(
-                        volunteer.copyWith(timeForSearch: newTime),
-                      );
+                  await viewModel.updateVolunteer(
+                      volunteer.copyWith(timeForSearch: newTime));
                 }
               },
             );

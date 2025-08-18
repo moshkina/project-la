@@ -99,18 +99,32 @@ class GroupsViewModel extends ChangeNotifier {
 class VolunteersViewModel extends ChangeNotifier {
   final VolunteersDao _volunteersDao;
   List<Volunteer> _volunteers = [];
+  String _searchQuery = '';
 
-  List<Volunteer> get volunteers => _volunteers;
+  List<Volunteer> get volunteers => _filterVolunteers(_volunteers);
+  String get searchQuery => _searchQuery;
 
   VolunteersViewModel(this._volunteersDao) {
     loadVolunteers();
   }
+
+  void setSearchQuery(String query) {
+    _searchQuery = query;
+    notifyListeners();
+  }
+
+  List<Volunteer> _filterVolunteers(List<Volunteer> volunteers) {
+    if (_searchQuery.isEmpty) return volunteers;
+
+    final lowerCaseQuery = _searchQuery.toLowerCase();
+    return volunteers.where((volunteer) {
+      return volunteer.fullName.toLowerCase().contains(lowerCaseQuery) ||
+          volunteer.callSign.toLowerCase().contains(lowerCaseQuery);
+    }).toList();
+  }
+
   Future<void> loadVolunteers() async {
     _volunteers = await _volunteersDao.getAllVolunteers();
-    print("Загружено волонтёров: ${_volunteers.length}");
-    for (var v in _volunteers) {
-      print(v);
-    }
     notifyListeners();
   }
 
@@ -140,11 +154,9 @@ class VolunteersViewModel extends ChangeNotifier {
   Future<void> sendDepartedVolunteersToInformant() async {
     final departedVolunteers =
         _volunteers.where((v) => v.status == 'уехал').toList();
-
-    notifyListeners(); // обновляет UI
+    notifyListeners();
   }
 
-  // Получение всех волонтеров
   Future<List<Volunteer>> getAllVolunteers() =>
       _volunteersDao.getAllVolunteers();
 
@@ -152,52 +164,42 @@ class VolunteersViewModel extends ChangeNotifier {
     return _volunteersDao.getVolunteersByGroupId(groupId);
   }
 
-  // Получение волонтеров, которые были отправлены
   Future<List<Volunteer>> getSentVolunteers() =>
       _volunteersDao.getSentVolunteers();
 
-  // Получение волонтеров, которые не были отправлены
   Future<List<Volunteer>> getNotSentVolunteers() =>
       _volunteersDao.getNotSentVolunteers();
 
-  // Получение волонтеров, которые были добавлены в группу
   Future<List<Volunteer>> getAddedToGroupVolunteers() =>
       _volunteersDao.getAddedToGroupVolunteers();
 
-  // Получение волонтеров по статусу и не добавленных в группу
   Future<List<Volunteer>> getVolunteersByStatusAndNotAddedToGroup(
           String status) =>
       _volunteersDao.getVolunteersByStatusAndNotAddedToGroup(status);
 
-  // Вставка нового волонтера в базу данных
   Future<void> insertVolunteer(Volunteer volunteer) async {
     await _volunteersDao.insertVolunteer(volunteer);
-    await loadVolunteers(); // Обновляем список и уведомляем
+    await loadVolunteers();
   }
 
-  // Обновление данных о волонтере
   Future<void> updateVolunteer(Volunteer volunteer) async {
     await _volunteersDao.updateVolunteer(volunteer);
     await loadVolunteers();
   }
 
-  // Удаление волонтера
   Future<void> deleteVolunteer(Volunteer volunteer) async {
     await _volunteersDao.deleteVolunteer(volunteer);
     await loadVolunteers();
   }
 
-  // Удаление всех волонтёров
   Future<void> deleteAllVolunteers() async {
     await _volunteersDao.deleteAllVolunteers();
     await loadVolunteers();
   }
 
-  // Получение волонтера по уникальному идентификатору
   Future<Volunteer?> getVolunteerById(int id) =>
       _volunteersDao.getVolunteerById(id);
 
-// Получить список активных волонтёров
   Future<List<Volunteer>> get activeVolunteers async {
     final volunteers = await _volunteersDao.getAllVolunteers();
     return volunteers
@@ -205,7 +207,6 @@ class VolunteersViewModel extends ChangeNotifier {
         .toList();
   }
 
-// Получить список архивных волонтёров
   Future<List<Volunteer>> get archivedVolunteers async {
     final volunteers = await _volunteersDao.getAllVolunteers();
     return volunteers
@@ -213,7 +214,6 @@ class VolunteersViewModel extends ChangeNotifier {
         .toList();
   }
 
-  // Архивировать волонтёра
   Future<void> archiveVolunteer(int volunteerId) async {
     final volunteer = await getVolunteerById(volunteerId);
     if (volunteer != null) {
@@ -222,7 +222,6 @@ class VolunteersViewModel extends ChangeNotifier {
     }
   }
 
-  // Восстановить волонтёра
   Future<void> restoreVolunteer(int volunteerId) async {
     final volunteer = await getVolunteerById(volunteerId);
     if (volunteer != null) {
