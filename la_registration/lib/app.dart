@@ -3,7 +3,7 @@ import 'ui/screens/tabbed_main_screen.dart';
 import 'ui/screens/counter_screen.dart';
 import 'ui/screens/add_group_screen.dart';
 import 'ui/screens/group_detail_screen.dart';
-import '../data/group_callsign.dart'; // Импорт для использования enum
+import '../data/group_callsign.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -20,12 +20,14 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const TabbedMainScreen(),
         '/counter': (context) => const CounterScreen(),
-        '/add_group': (context) => const AddNewGroupScreen(
-              groupId: 0,
-              groupCallsign:
-                  GroupCallsigns.bort, 
-              isGroupEdit: false,
-            ),
+        '/add_group': (context) {
+  final args = ModalRoute.of(context)?.settings.arguments as GroupCallsigns?;
+  return AddNewGroupScreen(
+    groupId: 0,
+    groupCallsign: args ?? GroupCallsigns.kinolog,
+    isGroupEdit: false,
+  );
+},
         '/group_details': (context) => const GroupDetailScreen(
               groupId: 1,
               isGroupArchive: false,

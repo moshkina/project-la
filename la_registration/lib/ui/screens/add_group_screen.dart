@@ -4,6 +4,7 @@ import 'package:la_registration/data/group.dart';
 import 'package:la_registration/data/volunteer.dart';
 import 'package:la_registration/viewmodels/groups_and_volunteers_viewmodel.dart';
 import 'package:la_registration/data/group_callsign.dart'; // Ensure GroupCallsign is imported correctly
+import 'package:la_registration/data/groups_dao.dart';
 
 class AddNewGroupScreen extends StatefulWidget {
   final GroupCallsigns
@@ -90,13 +91,13 @@ class AddNewGroupScreenState extends State<AddNewGroupScreen> {
 
   final groupsViewModel = context.read<GroupsViewModel>();
   final volunteersViewModel = context.read<VolunteersViewModel>();
-  final groupsWithSameCallsign = groupsViewModel.groups.where((g) => g.groupCallsign == widget.groupCallsign).toList();
+  final lastNumber = await groupsViewModel.getLastNumberOfGroup(widget.groupCallsign.name);
+  final newGroupNumber = (lastNumber ?? 0) + 1;
 
-  final newGroupNumber = groupsWithSameCallsign.length + 1;
   // Создаём или обновляем группу
   final group = Group(
     id: widget.isGroupEdit ? widget.groupId : null,
-    numberOfGroup: newGroupNumber, // или вычислить автоматически, если нужно
+    numberOfGroup: newGroupNumber,
     dateOfCreation: DateTime.now().toIso8601String(),
     groupCallsign: widget.groupCallsign,
     elderOfGroupId: elder!.uniqueId!,
