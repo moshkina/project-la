@@ -25,6 +25,9 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
   late TextEditingController carController;
   late Volunteer volunteer;
   bool isEdited = false;
+  bool _isNameDuplicate = false;
+  bool _isPhoneDuplicate = false;
+  String _duplicateMessage = '';
 
   @override
   void initState() {
@@ -37,6 +40,9 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
     regionController = TextEditingController();
     phoneNumberController = TextEditingController();
     carController = TextEditingController();
+
+    fullNameController.addListener(_checkForDuplicate);
+    phoneNumberController.addListener(_checkForDuplicate);
 
     if (widget.volunteerId != 0) {
       _viewModel.getVolunteerById(widget.volunteerId).then((vol) {
@@ -54,6 +60,73 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    fullNameController.removeListener(_checkForDuplicate);
+    phoneNumberController.removeListener(_checkForDuplicate);
+    fullNameController.dispose();
+    callSignController.dispose();
+    forumNicknameController.dispose();
+    regionController.dispose();
+    phoneNumberController.dispose();
+    carController.dispose();
+    super.dispose();
+  }
+
+  void _checkForDuplicate() async {
+    final name = fullNameController.text.trim();
+    final phone = phoneNumberController.text.trim();
+
+    if (name.isEmpty && phone.isEmpty) {
+      setState(() {
+        _isNameDuplicate = false;
+        _isPhoneDuplicate = false;
+        _duplicateMessage = '';
+      });
+      return;
+    }
+
+    final volunteers = await _viewModel.getAllVolunteers();
+
+    // Совпадения по имени
+    final nameMatches = name.isNotEmpty
+        ? volunteers
+            .where((v) => v.fullName.toLowerCase() == name.toLowerCase())
+            .toList()
+        : [];
+
+    // Совпадения по телефону
+    final phoneMatches = phone.isNotEmpty
+        ? volunteers.where((v) => v.phoneNumber == phone).toList()
+        : [];
+
+    setState(() {
+      _isNameDuplicate = nameMatches.isNotEmpty;
+      _isPhoneDuplicate = phoneMatches.isNotEmpty;
+
+      if (_isNameDuplicate && _isPhoneDuplicate) {
+        // Проверяем, совпадает ли и имя, и телефон у одного и того же волонтёра
+        final samePerson = volunteers.any((v) =>
+            v.fullName.toLowerCase() == name.toLowerCase() &&
+            v.phoneNumber == phone);
+
+        if (samePerson) {
+          _duplicateMessage = 'Этот человек вероятно уже внесён';
+        } else {
+          // разные люди
+          _duplicateMessage =
+              'Имя совпадает с одним человеком, телефон — с другим';
+        }
+      } else if (_isNameDuplicate) {
+        _duplicateMessage = 'Человек с таким именем уже есть в базе';
+      } else if (_isPhoneDuplicate) {
+        _duplicateMessage = 'Этот номер телефона уже есть в базе';
+      } else {
+        _duplicateMessage = '';
+      }
+    });
+  }
+
   void _saveData() {
     String fullName = fullNameController.text.trim();
     String callSign = callSignController.text.trim();
@@ -65,11 +138,22 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
     if (fullName.isEmpty || phoneNumber.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text("Пожалуйста, заполните обязательные поля.")));
-    } else if (isEdited) {
+      return;
+    }
+
+    // // ⚡ Больше не блокируем сохранение, просто предупреждаем
+    // if ((_isNameDuplicate || _isPhoneDuplicate) && !isEdited) {
+    //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+    //     content: Text("⚠ $_duplicateMessage\nВсё равно сохраняем."),
+    //     duration: const Duration(seconds: 3),
+    //   ));
+    // }
+
+    if (isEdited) {
       print('[DEBUG] Обновление волонтера ID: ${volunteer.uniqueId}');
       volunteer = Volunteer(
-          uniqueId: volunteer.uniqueId, // Keep the existing uniqueId
-          index: volunteer.index, // Передаем индекс
+          uniqueId: volunteer.uniqueId,
+          index: volunteer.index,
           fullName: fullName,
           phoneNumber: phoneNumber,
           callSign: callSign,
@@ -81,16 +165,15 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
           timeForSearch: volunteer.timeForSearch,
           groupId: volunteer.groupId);
       _viewModel.updateVolunteer(volunteer).then((_) {
-        print('[DEBUG] Волонтер успешно обновлен'); // <--
+        print('[DEBUG] Волонтер успешно обновлен');
         Navigator.pop(context);
       }).catchError((e) {
-        print('[ERROR] Ошибка обновления: $e'); // <--
+        print('[ERROR] Ошибка обновления: $e');
       });
-      Navigator.pop(context);
     } else {
       print('[DEBUG] Создание нового волонтера');
       Volunteer newVolunteer = Volunteer(
-          index: 0, // Убедитесь, что _index передается
+          index: 0,
           fullName: fullName,
           phoneNumber: phoneNumber,
           callSign: callSign,
@@ -99,14 +182,13 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
           car: car,
           status: "Активный",
           notifyThatLeft: "false",
-          timeForSearch: "", // Задайте нужные значения по умолчанию
-          groupId: null // Если нужно, передайте значение groupId
-          );
+          timeForSearch: "",
+          groupId: null);
       _viewModel.insertVolunteer(newVolunteer).then((_) {
-        print('[DEBUG] Новый волонтер успешно сохранен'); // <--
+        print('[DEBUG] Новый волонтер успешно сохранен');
         Navigator.pop(context);
       }).catchError((e) {
-        print('[ERROR] Ошибка сохранения: $e'); // <--
+        print('[ERROR] Ошибка сохранения: $e');
       });
     }
   }
@@ -117,11 +199,11 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
       appBar: AppBar(
         title: const Text(
           'Добавить вручную',
-          style: TextStyle(color: Colors.white), // Белый текст
+          style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFF96800), // Оранжевый фон
+        backgroundColor: const Color(0xFFF96800),
       ),
-      backgroundColor: Colors.black, // Чёрный фон для всего экрана
+      backgroundColor: Colors.black,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -129,114 +211,127 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
             TextField(
               controller: fullNameController,
               decoration: const InputDecoration(
-                labelText: "Полное имя",
-                labelStyle: TextStyle(color: Colors.white), // Белый текст
+                labelText: "Полное имя*",
+                labelStyle: TextStyle(color: Colors.white),
                 hintText: "Введите полное имя",
-                hintStyle:
-                    TextStyle(color: Colors.grey), // Прозрачные подсказки
+                hintStyle: TextStyle(color: Colors.grey),
                 focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white), // Белая рамка
+                  borderSide: BorderSide(color: Colors.white),
                 ),
                 enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white), // Белая рамка
+                  borderSide: BorderSide(color: Colors.white),
                 ),
               ),
-              style: const TextStyle(color: Colors.white), // Белый текст
+              style: const TextStyle(color: Colors.white),
             ),
+            if (_isNameDuplicate && fullNameController.text.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Text(
+                  _duplicateMessage,
+                  style: const TextStyle(color: Colors.orange),
+                ),
+              ),
+            TextField(
+              controller: phoneNumberController,
+              decoration: const InputDecoration(
+                labelText: "Телефон*",
+                labelStyle: TextStyle(color: Colors.white),
+                hintText: "Введите номер телефона",
+                hintStyle: TextStyle(color: Colors.grey),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              style: const TextStyle(color: Colors.white),
+              keyboardType: TextInputType.phone,
+            ),
+            if (_isPhoneDuplicate && phoneNumberController.text.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Text(
+                  _duplicateMessage,
+                  style: const TextStyle(color: Colors.orange),
+                ),
+              ),
+            // Остальные поля остаются без изменений
             TextField(
               controller: callSignController,
               decoration: const InputDecoration(
                 labelText: "Позывной",
-                labelStyle: TextStyle(color: Colors.white), // Белый текст
+                labelStyle: TextStyle(color: Colors.white),
                 hintText: "Введите позывной",
-                hintStyle:
-                    TextStyle(color: Colors.grey), // Прозрачные подсказки
+                hintStyle: TextStyle(color: Colors.grey),
                 focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white), // Белая рамка
+                  borderSide: BorderSide(color: Colors.white),
                 ),
                 enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white), // Белая рамка
+                  borderSide: BorderSide(color: Colors.white),
                 ),
               ),
-              style: const TextStyle(color: Colors.white), // Белый текст
+              style: const TextStyle(color: Colors.white),
             ),
             TextField(
               controller: forumNicknameController,
               decoration: const InputDecoration(
                 labelText: "Ник на форуме",
-                labelStyle: TextStyle(color: Colors.white), // Белый текст
+                labelStyle: TextStyle(color: Colors.white),
                 hintText: "Введите ник на форуме",
-                hintStyle:
-                    TextStyle(color: Colors.grey), // Прозрачные подсказки
+                hintStyle: TextStyle(color: Colors.grey),
                 focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white), // Белая рамка
+                  borderSide: BorderSide(color: Colors.white),
                 ),
                 enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white), // Белая рамка
+                  borderSide: BorderSide(color: Colors.white),
                 ),
               ),
-              style: const TextStyle(color: Colors.white), // Белый текст
+              style: const TextStyle(color: Colors.white),
             ),
             TextField(
               controller: regionController,
               decoration: const InputDecoration(
                 labelText: "Регион",
-                labelStyle: TextStyle(color: Colors.white), // Белый текст
+                labelStyle: TextStyle(color: Colors.white),
                 hintText: "Введите регион",
-                hintStyle:
-                    TextStyle(color: Colors.grey), // Прозрачные подсказки
+                hintStyle: TextStyle(color: Colors.grey),
                 focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white), // Белая рамка
+                  borderSide: BorderSide(color: Colors.white),
                 ),
                 enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white), // Белая рамка
+                  borderSide: BorderSide(color: Colors.white),
                 ),
               ),
-              style: const TextStyle(color: Colors.white), // Белый текст
-            ),
-            TextField(
-              controller: phoneNumberController,
-              decoration: const InputDecoration(
-                labelText: "Телефон",
-                labelStyle: TextStyle(color: Colors.white), // Белый текст
-                hintText: "Введите номер телефона",
-                hintStyle:
-                    TextStyle(color: Colors.grey), // Прозрачные подсказки
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white), // Белая рамка
-                ),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white), // Белая рамка
-                ),
-              ),
-              style: const TextStyle(color: Colors.white), // Белый текст
+              style: const TextStyle(color: Colors.white),
             ),
             TextField(
               controller: carController,
               decoration: const InputDecoration(
                 labelText: "Машина",
-                labelStyle: TextStyle(color: Colors.white), // Белый текст
+                labelStyle: TextStyle(color: Colors.white),
                 hintText: "Введите гос.номер",
-                hintStyle:
-                    TextStyle(color: Colors.grey), // Прозрачные подсказки
+                hintStyle: TextStyle(color: Colors.grey),
                 focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white), // Белая рамка
+                  borderSide: BorderSide(color: Colors.white),
                 ),
                 enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white), // Белая рамка
+                  borderSide: BorderSide(color: Colors.white),
                 ),
               ),
-              style: const TextStyle(color: Colors.white), // Белый текст
+              style: const TextStyle(color: Colors.white),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _saveData,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFF96800),
+                minimumSize: const Size(double.infinity, 50),
               ),
               child: Text(
                 isEdited ? 'Сохранить изменения' : 'Сохранить',
-                style: const TextStyle(color: Colors.white), // Белый текст
+                style: const TextStyle(color: Colors.white, fontSize: 16),
               ),
             ),
           ],
