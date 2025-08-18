@@ -28,10 +28,13 @@ class MyApp extends StatelessWidget {
     isGroupEdit: false,
   );
 },
-        '/group_details': (context) => const GroupDetailScreen(
-              groupId: 1,
-              isGroupArchive: false,
-            ),
+        '/group_details': (context) {
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    return GroupDetailScreen(
+      groupId: args?['groupId'] ?? 0, // 0 - значение по умолчанию, если не передано
+      isGroupArchive: args?['isGroupArchive'] ?? false,
+    );
+  },
       },
     );
   }

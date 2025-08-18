@@ -32,9 +32,15 @@ class GroupCard extends StatelessWidget {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Группа отправлена в архив')),
               );
-            } else if (value == 'details') {
-              Navigator.pushNamed(context, '/group_details',
-                  arguments: group.id);
+           } else if (value == 'details') {
+              Navigator.pushNamed(
+                context, 
+                '/group_details',
+                arguments: {
+                  'groupId': group.id,
+                  'isGroupArchive': isArchived,
+                },
+              );
             }
           },
           itemBuilder: (context) => [

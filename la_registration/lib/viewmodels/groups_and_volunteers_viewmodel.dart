@@ -113,6 +113,11 @@ class VolunteersViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+Future<List<Volunteer>> getVolunteersWithoutGroup() async {
+  final allVolunteers = await getAllVolunteers();
+  return allVolunteers.where((v) => v.groupId == null).toList();
+}
+
   List<Volunteer> _filterVolunteers(List<Volunteer> volunteers) {
     if (_searchQuery.isEmpty) return volunteers;
 

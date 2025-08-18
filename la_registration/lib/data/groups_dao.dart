@@ -34,7 +34,7 @@ abstract class GroupsDao {
       'DELETE FROM groups WHERE groupCallsign = :callsign AND archived = "true"')
   Future<void> deleteArchivedGroups();
 
-  @update
+  @Update(onConflict: OnConflictStrategy.replace)
   Future<int> updateGroup(Group group);
 
   @Query('SELECT * FROM groups WHERE id = :id')
