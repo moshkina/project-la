@@ -119,7 +119,7 @@ class AddNewGroupScreenState extends State<AddNewGroupScreen> {
       await volunteersViewModel.updateVolunteer(updatedVolunteer);
     }
 
-    if (mounted) Navigator.pop(context);
+    if (mounted) {Navigator.pop(context);}
   } catch (e, stackTrace) {
   print('Ошибка при сохранении группы: $e');
   print('StackTrace: $stackTrace');
@@ -151,7 +151,9 @@ Widget build(BuildContext context) {
             optionsBuilder: (TextEditingValue textEditingValue) {
               if (textEditingValue.text.isEmpty) return const Iterable.empty();
               final viewModel = context.read<VolunteersViewModel>();
-              return viewModel.volunteers.where((vol) =>
+              return viewModel.volunteers
+                .where((vol) => vol.groupId == null)
+                .where((vol) =>
                   vol.fullName.toLowerCase().contains(textEditingValue.text.toLowerCase()));
             },
             displayStringForOption: (Volunteer vol) => vol.fullName,

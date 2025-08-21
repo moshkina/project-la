@@ -98,7 +98,7 @@ class _$AppDatabase extends AppDatabase {
       },
       onCreate: (database, version) async {
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `groups` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `numberOfGroup` INTEGER NOT NULL, `elderOfGroupId` INTEGER NOT NULL, `navigators` TEXT NOT NULL, `cars` TEXT NOT NULL, `dateOfCreation` TEXT NOT NULL, `groupCallsign` INTEGER NOT NULL, `archived` TEXT NOT NULL, FOREIGN KEY (`elderOfGroupId`) REFERENCES `volunteers` (`uniqueId`) ON UPDATE NO ACTION ON DELETE CASCADE)');
+            'CREATE TABLE IF NOT EXISTS `groups` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `numberOfGroup` INTEGER NOT NULL, `elderOfGroupId` INTEGER NOT NULL, `navigators` TEXT NOT NULL, `cars` TEXT NOT NULL, `dateOfCreation` TEXT NOT NULL, `groupCallsign` INTEGER NOT NULL, `archived` TEXT NOT NULL, `task` TEXT, `radios` TEXT, `compasses` TEXT, `flashlights` TEXT, `otherEquipment` TEXT, `notes` TEXT, FOREIGN KEY (`elderOfGroupId`) REFERENCES `volunteers` (`uniqueId`) ON UPDATE NO ACTION ON DELETE CASCADE)');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `volunteers` (`uniqueId` INTEGER PRIMARY KEY AUTOINCREMENT, `_index` INTEGER NOT NULL, `fullName` TEXT NOT NULL, `callSign` TEXT NOT NULL, `nickName` TEXT NOT NULL, `region` TEXT NOT NULL, `phoneNumber` TEXT NOT NULL, `car` TEXT NOT NULL, `isSent` INTEGER NOT NULL, `status` TEXT NOT NULL, `notifyThatLeft` TEXT NOT NULL, `timeForSearch` TEXT NOT NULL, `groupId` INTEGER)');
 
@@ -135,7 +135,13 @@ class _$GroupsDao extends GroupsDao {
                   'cars': item.cars,
                   'dateOfCreation': item.dateOfCreation,
                   'groupCallsign': item.groupCallsign.index,
-                  'archived': item.archived
+                  'archived': item.archived,
+                  'task': item.task,
+                  'radios': item.radios,
+                  'compasses': item.compasses,
+                  'flashlights': item.flashlights,
+                  'otherEquipment': item.otherEquipment,
+                  'notes': item.notes
                 }),
         _groupUpdateAdapter = UpdateAdapter(
             database,
@@ -149,7 +155,13 @@ class _$GroupsDao extends GroupsDao {
                   'cars': item.cars,
                   'dateOfCreation': item.dateOfCreation,
                   'groupCallsign': item.groupCallsign.index,
-                  'archived': item.archived
+                  'archived': item.archived,
+                  'task': item.task,
+                  'radios': item.radios,
+                  'compasses': item.compasses,
+                  'flashlights': item.flashlights,
+                  'otherEquipment': item.otherEquipment,
+                  'notes': item.notes
                 }),
         _groupDeletionAdapter = DeletionAdapter(
             database,
@@ -163,7 +175,13 @@ class _$GroupsDao extends GroupsDao {
                   'cars': item.cars,
                   'dateOfCreation': item.dateOfCreation,
                   'groupCallsign': item.groupCallsign.index,
-                  'archived': item.archived
+                  'archived': item.archived,
+                  'task': item.task,
+                  'radios': item.radios,
+                  'compasses': item.compasses,
+                  'flashlights': item.flashlights,
+                  'otherEquipment': item.otherEquipment,
+                  'notes': item.notes
                 });
 
   final sqflite.DatabaseExecutor database;
@@ -183,14 +201,20 @@ class _$GroupsDao extends GroupsDao {
     return _queryAdapter.queryList(
         'SELECT * FROM groups ORDER BY groupCallsign',
         mapper: (Map<String, Object?> row) => Group(
-            id: row['id'] as int,
+            id: row['id'] as int?,
             numberOfGroup: row['numberOfGroup'] as int,
             elderOfGroupId: row['elderOfGroupId'] as int,
             navigators: row['navigators'] as String,
             cars: row['cars'] as String,
             dateOfCreation: row['dateOfCreation'] as String,
             groupCallsign: GroupCallsigns.values[row['groupCallsign'] as int],
-            archived: row['archived'] as String));
+            archived: row['archived'] as String,
+            task: row['task'] as String?,
+            radios: row['radios'] as String?,
+            compasses: row['compasses'] as String?,
+            flashlights: row['flashlights'] as String?,
+            otherEquipment: row['otherEquipment'] as String?,
+            notes: row['notes'] as String?));
   }
 
   @override
@@ -198,7 +222,7 @@ class _$GroupsDao extends GroupsDao {
       GroupCallsigns groupCallsign) async {
     return _queryAdapter.queryList(
         'SELECT * FROM groups WHERE groupCallsign = ?1 AND archived = \"false\"',
-        mapper: (Map<String, Object?> row) => Group(id: row['id'] as int, numberOfGroup: row['numberOfGroup'] as int, elderOfGroupId: row['elderOfGroupId'] as int, navigators: row['navigators'] as String, cars: row['cars'] as String, dateOfCreation: row['dateOfCreation'] as String, groupCallsign: GroupCallsigns.values[row['groupCallsign'] as int], archived: row['archived'] as String),
+        mapper: (Map<String, Object?> row) => Group(id: row['id'] as int?, numberOfGroup: row['numberOfGroup'] as int, elderOfGroupId: row['elderOfGroupId'] as int, navigators: row['navigators'] as String, cars: row['cars'] as String, dateOfCreation: row['dateOfCreation'] as String, groupCallsign: GroupCallsigns.values[row['groupCallsign'] as int], archived: row['archived'] as String, task: row['task'] as String?, radios: row['radios'] as String?, compasses: row['compasses'] as String?, flashlights: row['flashlights'] as String?, otherEquipment: row['otherEquipment'] as String?, notes: row['notes'] as String?),
         arguments: [groupCallsign.index]);
   }
 
@@ -208,14 +232,20 @@ class _$GroupsDao extends GroupsDao {
     return _queryAdapter.queryList(
         'SELECT * FROM groups WHERE groupCallsign = ?1 AND archived = \"true\"',
         mapper: (Map<String, Object?> row) => Group(
-            id: row['id'] as int,
+            id: row['id'] as int?,
             numberOfGroup: row['numberOfGroup'] as int,
             elderOfGroupId: row['elderOfGroupId'] as int,
             navigators: row['navigators'] as String,
             cars: row['cars'] as String,
             dateOfCreation: row['dateOfCreation'] as String,
             groupCallsign: GroupCallsigns.values[row['groupCallsign'] as int],
-            archived: row['archived'] as String),
+            archived: row['archived'] as String,
+            task: row['task'] as String?,
+            radios: row['radios'] as String?,
+            compasses: row['compasses'] as String?,
+            flashlights: row['flashlights'] as String?,
+            otherEquipment: row['otherEquipment'] as String?,
+            notes: row['notes'] as String?),
         arguments: [groupCallsign.index]);
   }
 
@@ -231,21 +261,27 @@ class _$GroupsDao extends GroupsDao {
   @override
   Future<void> deleteArchivedGroups() async {
     await _queryAdapter
-        .queryNoReturn('DELETE FROM groups WHERE archived = "true"');
+        .queryNoReturn('DELETE FROM groups WHERE archived = \"true\"');
   }
 
   @override
   Future<Group?> getGroupById(int id) async {
     return _queryAdapter.query('SELECT * FROM groups WHERE id = ?1',
         mapper: (Map<String, Object?> row) => Group(
-            id: row['id'] as int,
+            id: row['id'] as int?,
             numberOfGroup: row['numberOfGroup'] as int,
             elderOfGroupId: row['elderOfGroupId'] as int,
             navigators: row['navigators'] as String,
             cars: row['cars'] as String,
             dateOfCreation: row['dateOfCreation'] as String,
             groupCallsign: GroupCallsigns.values[row['groupCallsign'] as int],
-            archived: row['archived'] as String),
+            archived: row['archived'] as String,
+            task: row['task'] as String?,
+            radios: row['radios'] as String?,
+            compasses: row['compasses'] as String?,
+            flashlights: row['flashlights'] as String?,
+            otherEquipment: row['otherEquipment'] as String?,
+            notes: row['notes'] as String?),
         arguments: [id]);
   }
 
@@ -260,7 +296,7 @@ class _$GroupsDao extends GroupsDao {
   Future<Group?> getArchivedGroupById(int id) async {
     return _queryAdapter.query(
         'SELECT * FROM groups      LEFT JOIN archived_groups_volunteers      ON archived_groups_volunteers.archivedGroupId = groups.id      LEFT JOIN volunteers      ON volunteers.uniqueId = archived_groups_volunteers.archivedVolunteerId      WHERE groups.id = ?1',
-        mapper: (Map<String, Object?> row) => Group(id: row['id'] as int, numberOfGroup: row['numberOfGroup'] as int, elderOfGroupId: row['elderOfGroupId'] as int, navigators: row['navigators'] as String, cars: row['cars'] as String, dateOfCreation: row['dateOfCreation'] as String, groupCallsign: GroupCallsigns.values[row['groupCallsign'] as int], archived: row['archived'] as String),
+        mapper: (Map<String, Object?> row) => Group(id: row['id'] as int?, numberOfGroup: row['numberOfGroup'] as int, elderOfGroupId: row['elderOfGroupId'] as int, navigators: row['navigators'] as String, cars: row['cars'] as String, dateOfCreation: row['dateOfCreation'] as String, groupCallsign: GroupCallsigns.values[row['groupCallsign'] as int], archived: row['archived'] as String, task: row['task'] as String?, radios: row['radios'] as String?, compasses: row['compasses'] as String?, flashlights: row['flashlights'] as String?, otherEquipment: row['otherEquipment'] as String?, notes: row['notes'] as String?),
         arguments: [id]);
   }
 
@@ -273,7 +309,7 @@ class _$GroupsDao extends GroupsDao {
   @override
   Future<int> updateGroup(Group group) {
     return _groupUpdateAdapter.updateAndReturnChangedRows(
-        group, OnConflictStrategy.abort);
+        group, OnConflictStrategy.replace);
   }
 
   @override

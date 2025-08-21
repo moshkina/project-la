@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:la_registration/data/group.dart';
+import 'package:la_registration/data/volunteer.dart';
 import 'package:la_registration/data/group_callsign.dart';
 import 'package:la_registration/viewmodels/groups_and_volunteers_viewmodel.dart';
+import '../widgets/group_card.dart'; // Импортируем GroupCard
 
 class ArchiveGroupsScreen extends StatefulWidget {
   final GroupCallsigns groupCallsign;
@@ -27,11 +29,20 @@ class _ArchiveGroupsScreenState extends State<ArchiveGroupsScreen> {
         .getGroupByCallsignArchived(widget.groupCallsign.name);
   }
 
+  Future<Volunteer?> _getElderForGroup(Group group) async {
+    try {
+      final volunteersViewModel = context.read<VolunteersViewModel>();
+      return await volunteersViewModel.getVolunteerById(group.elderOfGroupId);
+    } catch (e) {
+      return null;
+    }
+  }
+
   Future<void> _clearArchive() async {
     final viewModel = Provider.of<GroupsViewModel>(context, listen: false);
     await viewModel.deleteArchivedGroups();
     _loadArchivedGroups();
-    setState(() {}); // обновим UI
+    setState(() {});
   }
 
   @override
@@ -69,19 +80,15 @@ class _ArchiveGroupsScreenState extends State<ArchiveGroupsScreen> {
             itemCount: groups.length,
             itemBuilder: (context, index) {
               final group = groups[index];
-              return Card(
-                color: Colors.grey[900],
-                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                child: ListTile(
-                  title: Text(
-                    '${group.groupCallsign.getGroupCallsignAsString()} №${group.numberOfGroup}',
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  subtitle: Text(
-                    'Задача: ${group.navigators}',
-                    style: const TextStyle(color: Colors.white70),
-                  ),
-                ),
+              return FutureBuilder<Volunteer?>(
+                future: _getElderForGroup(group),
+                builder: (context, elderSnapshot) {
+                  return GroupCard(
+                    group: group,
+                    isArchived: true, // Важно: передаем true для архивных групп
+                    elder: elderSnapshot.data,
+                  );
+                },
               );
             },
           );
@@ -94,17 +101,17 @@ class _ArchiveGroupsScreenState extends State<ArchiveGroupsScreen> {
           final confirm = await showDialog<bool>(
             context: context,
             builder: (context) => AlertDialog(
-              title: const Text('Очистить архив?'),
-              content:
-                  const Text('Все архивные группы будут удалены безвозвратно.'),
+              backgroundColor: Colors.grey[900],
+              title: const Text('Очистить архив?', style: TextStyle(color: Colors.white)),
+              content: const Text('Все архивные группы будут удалены безвозвратно.', style: TextStyle(color: Colors.white70)),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Отмена'),
+                  child: const Text('Отмена', style: TextStyle(color: Colors.white)),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Удалить'),
+                  child: const Text('Удалить', style: TextStyle(color: Colors.red)),
                 ),
               ],
             ),

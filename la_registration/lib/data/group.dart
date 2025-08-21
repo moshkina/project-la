@@ -26,11 +26,12 @@ class Group {
   final String dateOfCreation;
   final GroupCallsigns groupCallsign;
   final String archived;
-  final String? task;         // Новое поле
-  final String? radios;       // Новое поле
-  final String? compasses;    // Новое поле
-  final String? flashlights;  // Новое поле
-  final String? otherEquipment; // Новое поле
+  final String? task;
+  final String? radios;
+  final String? compasses;
+  final String? flashlights;
+  final String? otherEquipment;
+  final String? notes; // Добавляем поле для заметок
 
   Group({
     this.id,
@@ -46,37 +47,39 @@ class Group {
     this.compasses = '',
     this.flashlights = '',
     this.otherEquipment = '',
+    this.notes = '', // Инициализируем по умолчанию
   });
-
-  Group copyWith({
-    int? id,
-    int? numberOfGroup,
-    int? elderOfGroupId,
-    String? navigators,
-    String? cars,
-    String? dateOfCreation,
-    GroupCallsigns? groupCallsign,
-    String? archived,
-    String? task,
-    String? radios,
-    String? compasses,
-    String? flashlights,
-    String? otherEquipment,
-  }) {
-    return Group(
-      id: id ?? this.id,
-      numberOfGroup: numberOfGroup ?? this.numberOfGroup,
-      elderOfGroupId: elderOfGroupId ?? this.elderOfGroupId,
-      navigators: navigators ?? this.navigators,
-      cars: cars ?? this.cars,
-      dateOfCreation: dateOfCreation ?? this.dateOfCreation,
-      groupCallsign: groupCallsign ?? this.groupCallsign,
-      archived: archived ?? this.archived,
-      task: task ?? this.task,
-      radios: radios ?? this.radios,
-      compasses: compasses ?? this.compasses,
-      flashlights: flashlights ?? this.flashlights,
-      otherEquipment: otherEquipment ?? this.otherEquipment,
-    );
-  }
+Group copyWith({
+  int? id,
+  int? numberOfGroup,
+  int? elderOfGroupId,
+  String? navigators,
+  String? cars,
+  String? dateOfCreation,
+  GroupCallsigns? groupCallsign,
+  String? archived,
+  String? task,
+  String? radios,
+  String? compasses,
+  String? flashlights,
+  String? otherEquipment,
+  String? notes, // Добавляем notes
+}) {
+  return Group(
+    id: id ?? this.id,
+    numberOfGroup: numberOfGroup ?? this.numberOfGroup,
+    elderOfGroupId: elderOfGroupId ?? this.elderOfGroupId,
+    navigators: navigators ?? this.navigators,
+    cars: cars ?? this.cars,
+    dateOfCreation: dateOfCreation ?? this.dateOfCreation,
+    groupCallsign: groupCallsign ?? this.groupCallsign,
+    archived: archived ?? this.archived,
+    task: task ?? this.task,
+    radios: radios ?? this.radios,
+    compasses: compasses ?? this.compasses,
+    flashlights: flashlights ?? this.flashlights,
+    otherEquipment: otherEquipment ?? this.otherEquipment,
+    notes: notes ?? this.notes, // Добавляем notes
+  );
+}
 }
