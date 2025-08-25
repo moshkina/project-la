@@ -9,9 +9,9 @@ import 'package:la_registration/ui/screens/group_tabs_screen.dart';
 import 'package:la_registration/ui/screens/barcode_scanner_screen.dart';
 import 'package:la_registration/ui/screens/add_manually_screen.dart';
 import 'package:la_registration/data/group.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import 'dart:async';
 
@@ -26,15 +26,43 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _nameSearchController = TextEditingController();
   bool _isSearchActive = false;
   Timer? _searchDebounce;
+  String? _searchName; // хранение имени поиска
 
   @override
   void dispose() {
     _searchController.dispose();
+    _nameSearchController.dispose();
     _tabController.dispose();
     _searchDebounce?.cancel();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    _loadSearchName(); // загрузка имени поиска при старте
+    Future.microtask(() {
+      Provider.of<VolunteersViewModel>(context, listen: false).loadVolunteers();
+    });
+  }
+
+  Future<void> _loadSearchName() async {
+    final prefs = await SharedPreferences.getInstance();
+    final name = prefs.getString('search_name');
+    if (name != null && mounted) {
+      setState(() {
+        _searchName = name;
+      });
+    }
+  }
+
+  Future<void> _saveSearchName(String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('search_name', name);
   }
 
   Future<String?> _pickTime(BuildContext context, String initialTime) async {
@@ -63,21 +91,22 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    Future.microtask(() {
-      Provider.of<VolunteersViewModel>(context, listen: false).loadVolunteers();
-    });
-  }
-
   void _onSearchChanged(String value) {
     if (_searchDebounce?.isActive ?? false) _searchDebounce?.cancel();
 
     _searchDebounce = Timer(const Duration(milliseconds: 300), () {
       Provider.of<VolunteersViewModel>(context, listen: false)
           .setSearchQuery(value);
+    });
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _isSearchActive = !_isSearchActive;
+      if (!_isSearchActive) {
+        _searchController.clear();
+        _onSearchChanged('');
+      }
     });
   }
 
@@ -154,16 +183,6 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
     );
   }
 
-  void _toggleSearch() {
-    setState(() {
-      _isSearchActive = !_isSearchActive;
-      if (!_isSearchActive) {
-        _searchController.clear();
-        _onSearchChanged('');
-      }
-    });
-  }
-
   Widget _buildDrawer() {
     return Drawer(
       child: Container(
@@ -179,8 +198,10 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
               ),
             ),
             ListTile(
-              title: const Text('Имя поиска',
-                  style: TextStyle(color: Colors.white)),
+              title: Text(
+                _searchName == null ? 'Имя поиска' : 'Имя поиска: $_searchName',
+                style: const TextStyle(color: Colors.white),
+              ),
               onTap: _showSearchNameDialog,
             ),
             ListTile(
@@ -349,14 +370,16 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
   }
 
   void _showSearchNameDialog() {
+    _nameSearchController.text = _searchName ?? '';
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF303030),
         title: const Text('Введите имя поиска',
             style: TextStyle(color: Colors.white)),
-        content: const TextField(
-          decoration: InputDecoration(
+        content: TextField(
+          controller: _nameSearchController,
+          decoration: const InputDecoration(
             hintText: 'Имя поиска',
             hintStyle: TextStyle(color: Colors.grey),
             focusedBorder: UnderlineInputBorder(
@@ -364,7 +387,7 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
             enabledBorder: UnderlineInputBorder(
                 borderSide: BorderSide(color: Colors.white)),
           ),
-          style: TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.white),
         ),
         actions: [
           TextButton(
@@ -376,7 +399,14 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
           TextButton(
             style:
                 TextButton.styleFrom(backgroundColor: const Color(0xFFF96800)),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              final name = _nameSearchController.text.trim();
+              setState(() {
+                _searchName = name;
+              });
+              _saveSearchName(name); // сохраняем имя в SharedPreferences
+              Navigator.pop(context);
+            },
             child: const Text('ОК', style: TextStyle(color: Colors.white)),
           ),
         ],
