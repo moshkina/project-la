@@ -6,8 +6,13 @@ import 'package:la_registration/viewmodels/groups_and_volunteers_viewmodel.dart'
 
 class ArchiveGroupsScreen extends StatefulWidget {
   final GroupCallsigns groupCallsign;
+  final String searchQuery;
 
-  const ArchiveGroupsScreen({super.key, required this.groupCallsign});
+  const ArchiveGroupsScreen({
+    super.key,
+    required this.groupCallsign,
+    this.searchQuery = '',
+  });
 
   @override
   State<ArchiveGroupsScreen> createState() => _ArchiveGroupsScreenState();
@@ -15,23 +20,52 @@ class ArchiveGroupsScreen extends StatefulWidget {
 
 class _ArchiveGroupsScreenState extends State<ArchiveGroupsScreen> {
   late Future<List<Group>> _futureGroups;
+  List<Group> _allGroups = [];
+  List<Group> _filteredGroups = [];
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
+    _searchQuery = widget.searchQuery.toLowerCase();
     _loadArchivedGroups();
+  }
+
+  @override
+  void didUpdateWidget(covariant ArchiveGroupsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.searchQuery != widget.searchQuery) {
+      _searchQuery = widget.searchQuery.toLowerCase();
+      _applyFilter();
+    }
   }
 
   void _loadArchivedGroups() {
     _futureGroups = Provider.of<GroupsViewModel>(context, listen: false)
         .getGroupByCallsignArchived(widget.groupCallsign.name);
+    _futureGroups.then((groups) {
+      setState(() {
+        _allGroups = groups;
+      });
+      _applyFilter();
+    });
+  }
+
+  void _applyFilter() {
+    setState(() {
+      _filteredGroups = _allGroups.where((group) {
+        final groupName =
+            '${group.groupCallsign.getGroupCallsignAsString()} №${group.numberOfGroup}'
+                .toLowerCase();
+        return groupName.contains(_searchQuery);
+      }).toList();
+    });
   }
 
   Future<void> _clearArchive() async {
     final viewModel = Provider.of<GroupsViewModel>(context, listen: false);
     await viewModel.deleteArchivedGroups();
     _loadArchivedGroups();
-    setState(() {}); // обновим UI
   }
 
   @override
@@ -54,9 +88,7 @@ class _ArchiveGroupsScreenState extends State<ArchiveGroupsScreen> {
             );
           }
 
-          final groups = snapshot.data ?? [];
-
-          if (groups.isEmpty) {
+          if (_filteredGroups.isEmpty) {
             return const Center(
               child: Text(
                 'Нет архивных групп',
@@ -66,9 +98,9 @@ class _ArchiveGroupsScreenState extends State<ArchiveGroupsScreen> {
           }
 
           return ListView.builder(
-            itemCount: groups.length,
+            itemCount: _filteredGroups.length,
             itemBuilder: (context, index) {
-              final group = groups[index];
+              final group = _filteredGroups[index];
               return Card(
                 color: Colors.grey[900],
                 margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
