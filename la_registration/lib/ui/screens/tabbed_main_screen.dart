@@ -8,7 +8,6 @@ import 'package:la_registration/data/group_callsign.dart';
 import 'package:la_registration/ui/screens/group_tabs_screen.dart';
 import 'package:la_registration/ui/screens/barcode_scanner_screen.dart';
 import 'package:la_registration/ui/screens/add_manually_screen.dart';
-import 'package:la_registration/data/group.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -32,22 +31,22 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
   String? _searchName; // хранение имени поиска
 
   @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    _loadSearchName();
+    Future.microtask(() {
+      Provider.of<VolunteersViewModel>(context, listen: false).loadVolunteers();
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     _nameSearchController.dispose();
     _tabController.dispose();
     _searchDebounce?.cancel();
     super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    _loadSearchName(); // загрузка имени поиска при старте
-    Future.microtask(() {
-      Provider.of<VolunteersViewModel>(context, listen: false).loadVolunteers();
-    });
   }
 
   Future<void> _loadSearchName() async {
@@ -258,11 +257,12 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
     );
   }
 
+  // ----- Вкладки -----
   Widget _buildNewVolunteersTab() {
     final viewModel = context.read<VolunteersViewModel>();
     return Stack(
       children: [
-        _buildVolunteersList(context, 'Новые'),
+        _buildVolunteersList('Новые'),
         Positioned(
           bottom: 16,
           right: 16,
@@ -324,7 +324,7 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
     final viewModel = context.read<VolunteersViewModel>();
     return Stack(
       children: [
-        _buildVolunteersList(context, 'Отправленные'),
+        _buildVolunteersList('Отправленные'),
         Positioned(
           bottom: 16,
           right: 16,
@@ -355,7 +355,7 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
   Widget _buildAllVolunteersTab() {
     return Stack(
       children: [
-        _buildVolunteersList(context, 'Все'),
+        _buildVolunteersList('Все'),
         Positioned(
           bottom: 16,
           right: 16,
@@ -366,6 +366,70 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildVolunteersList(String tabName) {
+    return Consumer<VolunteersViewModel>(
+      builder: (context, viewModel, child) {
+        List<Volunteer> volunteers = [];
+        switch (tabName) {
+          case 'Новые':
+            volunteers = viewModel.volunteers.where((v) => !v.isSent).toList();
+            break;
+          case 'Отправленные':
+            volunteers = viewModel.volunteers.where((v) => v.isSent).toList();
+            break;
+          case 'Все':
+            volunteers = viewModel.volunteers;
+            break;
+        }
+
+        return ListView.builder(
+          itemCount: volunteers.length,
+          itemBuilder: (context, index) {
+            final volunteer = volunteers[index];
+            return VolunteerCard(
+              volunteer: volunteer,
+              groupName: volunteer.groupId?.toString(),
+              onEdit: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddManuallyScreen(
+                      volunteerId: volunteer.index,
+                      size: '5',
+                    ),
+                  ),
+                );
+              },
+              onChangeStatus: () async {
+                final newStatus =
+                    volunteer.status == 'Активный' ? 'Уехал' : 'Активный';
+                final updatedVolunteer = volunteer.copyWith(
+                  status: newStatus,
+                  isSent: newStatus == 'Активный' ? false : volunteer.isSent,
+                );
+                await viewModel.updateVolunteer(updatedVolunteer);
+
+                if (tabName == 'Отправленные' && newStatus == 'Активный') {
+                  setState(() {
+                    _tabController.animateTo(0);
+                  });
+                }
+              },
+              onChangeTime: () async {
+                final newTime =
+                    await _pickTime(context, volunteer.timeForSearch);
+                if (newTime != null) {
+                  await viewModel.updateVolunteer(
+                      volunteer.copyWith(timeForSearch: newTime));
+                }
+              },
+            );
+          },
+        );
+      },
     );
   }
 
@@ -404,7 +468,7 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
               setState(() {
                 _searchName = name;
               });
-              _saveSearchName(name); // сохраняем имя в SharedPreferences
+              _saveSearchName(name);
               Navigator.pop(context);
             },
             child: const Text('ОК', style: TextStyle(color: Colors.white)),
@@ -442,62 +506,6 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildVolunteersList(BuildContext context, String tabName) {
-    return Consumer<VolunteersViewModel>(
-      builder: (context, viewModel, child) {
-        List<Volunteer> volunteers = [];
-
-        switch (tabName) {
-          case 'Новые':
-            volunteers = viewModel.volunteers.where((v) => !v.isSent).toList();
-            break;
-          case 'Отправленные':
-            volunteers = viewModel.volunteers.where((v) => v.isSent).toList();
-            break;
-          case 'Все':
-            volunteers = viewModel.volunteers;
-            break;
-        }
-
-        return ListView.builder(
-          itemCount: volunteers.length,
-          itemBuilder: (context, index) {
-            final volunteer = volunteers[index];
-            return VolunteerCard(
-              volunteer: volunteer,
-              groupName: volunteer.groupId?.toString(),
-              onEdit: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AddManuallyScreen(
-                      volunteerId: volunteer.index,
-                      size: '5',
-                    ),
-                  ),
-                );
-              },
-              onChangeStatus: () async {
-                final newStatus =
-                    volunteer.status == 'Активный' ? 'Уехал' : 'Активный';
-                await viewModel
-                    .updateVolunteer(volunteer.copyWith(status: newStatus));
-              },
-              onChangeTime: () async {
-                final newTime =
-                    await _pickTime(context, volunteer.timeForSearch);
-                if (newTime != null) {
-                  await viewModel.updateVolunteer(
-                      volunteer.copyWith(timeForSearch: newTime));
-                }
-              },
-            );
-          },
-        );
-      },
     );
   }
 }
