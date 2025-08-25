@@ -8,21 +8,26 @@ import '../data/group_callsign.dart';
 
 class GroupsViewModel extends ChangeNotifier {
   final GroupsDao _groupsDao;
-
-  GroupsViewModel(this._groupsDao);
   List<Group> _groups = [];
+  
   List<Group> get groups => _groups;
-  Future<List<Group>> getAllGroups() => _groupsDao.getAllGroups();
-  final Map<GroupCallsigns, List<Group>> _groupsByCallsign = {};
+
+  GroupsViewModel(this._groupsDao) {
+    _loadAllGroups(); // Загружаем группы при создании
+  }
+
+  // Загрузка всех групп
+  Future<void> _loadAllGroups() async {
+    _groups = await _groupsDao.getAllGroups();
+    notifyListeners();
+  }
 
   List<Group> getGroupsForCallsign(GroupCallsigns callsign) {
-    return _groupsByCallsign[callsign] ?? [];
+    return _groups.where((group) => group.groupCallsign == callsign).toList();
   }
 
   Future<void> loadGroupsByCallsign(GroupCallsigns callsign) async {
-    final groups = await _groupsDao.getGroupsByCallsignNotArchived(callsign);
-    _groupsByCallsign[callsign] = groups;
-    notifyListeners();
+    await _loadAllGroups(); // Просто перезагружаем все группы
   }
 
   Future<List<Group>> getGroupByCallsignNotArchived(String groupCallsign) {
@@ -34,8 +39,8 @@ class GroupsViewModel extends ChangeNotifier {
   }
 
   Future<List<Group>> getActiveGroups(String groupCallsign) async {
-    final groups = await _groupsDao.getAllGroups();
-    return groups
+    await _loadAllGroups(); // Обновляем кэш
+    return _groups
         .where((group) => group.groupCallsign.name == groupCallsign)
         .toList();
   }
@@ -66,25 +71,25 @@ class GroupsViewModel extends ChangeNotifier {
 
   Future<int> insertGroup(Group group) async {
     final id = await _groupsDao.insertGroup(group);
-    notifyListeners();
+    await _loadAllGroups(); // Перезагружаем группы после вставки
     return id;
   }
 
   Future<int> updateGroup(Group group) async {
     final id = await _groupsDao.updateGroup(group);
-    notifyListeners();
+    await _loadAllGroups(); // Перезагружаем группы после обновления
     return id;
   }
 
   Future<int> deleteGroup(Group group) async {
     final id = await _groupsDao.deleteGroup(group);
-    notifyListeners();
+    await _loadAllGroups(); // Перезагружаем группы после удаления
     return id;
   }
 
   Future<void> deleteArchivedGroups() async {
     await _groupsDao.deleteArchivedGroups();
-    notifyListeners();
+    await _loadAllGroups(); // Перезагружаем группы после удаления
   }
 
   Future<Group?> getGroupById(int id) => _groupsDao.getGroupById(id);
