@@ -21,17 +21,22 @@ class MyApp extends StatelessWidget {
         '/': (context) => const TabbedMainScreen(),
         '/counter': (context) => const CounterScreen(),
         '/add_group': (context) {
-  final args = ModalRoute.of(context)?.settings.arguments as GroupCallsigns?;
-  return AddNewGroupScreen(
-    groupId: 0,
-    groupCallsign: args ?? GroupCallsigns.kinolog,
-    isGroupEdit: false,
-  );
-},
-        '/group_details': (context) => const GroupDetailScreen(
-              groupId: 1,
-              isGroupArchive: false,
-            ),
+          final args =
+              ModalRoute.of(context)?.settings.arguments as GroupCallsigns?;
+          return AddNewGroupScreen(
+            groupId: 0,
+            groupCallsign: args ?? GroupCallsigns.kinolog,
+            isGroupEdit: false,
+          );
+        },
+        '/group_details': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments
+              as Map<String, dynamic>?;
+          return GroupDetailScreen(
+            groupId: args?['groupId'] ?? 0,
+            isGroupArchive: args?['isGroupArchive'] ?? false,
+          );
+        },
       },
     );
   }

@@ -21,7 +21,7 @@ class Volunteer {
   final int? groupId;
 
   Volunteer({
-    this.uniqueId, // теперь необязательный — Floor сам сгенерирует
+    this.uniqueId,
     required this.index,
     required this.fullName,
     this.callSign = "",
@@ -38,6 +38,7 @@ class Volunteer {
 
   @override
   String toString() => "$fullName ($callSign)";
+  static const _noChange = Object();
 
   Map<String, dynamic> toJson() {
     return {
@@ -57,7 +58,7 @@ class Volunteer {
     };
   }
 
-    Volunteer copyWith({
+  Volunteer copyWith({
     int? uniqueId,
     int? index,
     String? fullName,
@@ -70,7 +71,7 @@ class Volunteer {
     String? status,
     String? notifyThatLeft,
     String? timeForSearch,
-    int? groupId,
+    Object? groupId = _noChange,
   }) {
     return Volunteer(
       uniqueId: uniqueId ?? this.uniqueId,
@@ -85,10 +86,9 @@ class Volunteer {
       status: status ?? this.status,
       notifyThatLeft: notifyThatLeft ?? this.notifyThatLeft,
       timeForSearch: timeForSearch ?? this.timeForSearch,
-      groupId: groupId ?? this.groupId,
+      groupId: groupId == _noChange ? this.groupId : groupId as int?,
     );
   }
-
 
   factory Volunteer.fromJson(Map<String, dynamic> json) {
     return Volunteer(

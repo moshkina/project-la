@@ -8,10 +8,9 @@ import 'package:la_registration/data/group_callsign.dart';
 import 'package:la_registration/ui/screens/group_tabs_screen.dart';
 import 'package:la_registration/ui/screens/barcode_scanner_screen.dart';
 import 'package:la_registration/ui/screens/add_manually_screen.dart';
-import 'package:la_registration/data/group.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import 'dart:async';
 
@@ -26,15 +25,43 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _nameSearchController = TextEditingController();
   bool _isSearchActive = false;
   Timer? _searchDebounce;
+  String? _searchName; // хранение имени поиска
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    _loadSearchName();
+    Future.microtask(() {
+      Provider.of<VolunteersViewModel>(context, listen: false).loadVolunteers();
+    });
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _nameSearchController.dispose();
     _tabController.dispose();
     _searchDebounce?.cancel();
     super.dispose();
+  }
+
+  Future<void> _loadSearchName() async {
+    final prefs = await SharedPreferences.getInstance();
+    final name = prefs.getString('search_name');
+    if (name != null && mounted) {
+      setState(() {
+        _searchName = name;
+      });
+    }
+  }
+
+  Future<void> _saveSearchName(String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('search_name', name);
   }
 
   Future<String?> _pickTime(BuildContext context, String initialTime) async {
@@ -63,21 +90,22 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    Future.microtask(() {
-      Provider.of<VolunteersViewModel>(context, listen: false).loadVolunteers();
-    });
-  }
-
   void _onSearchChanged(String value) {
     if (_searchDebounce?.isActive ?? false) _searchDebounce?.cancel();
 
     _searchDebounce = Timer(const Duration(milliseconds: 300), () {
       Provider.of<VolunteersViewModel>(context, listen: false)
           .setSearchQuery(value);
+    });
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _isSearchActive = !_isSearchActive;
+      if (!_isSearchActive) {
+        _searchController.clear();
+        _onSearchChanged('');
+      }
     });
   }
 
@@ -154,16 +182,6 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
     );
   }
 
-  void _toggleSearch() {
-    setState(() {
-      _isSearchActive = !_isSearchActive;
-      if (!_isSearchActive) {
-        _searchController.clear();
-        _onSearchChanged('');
-      }
-    });
-  }
-
   Widget _buildDrawer() {
     return Drawer(
       child: Container(
@@ -179,8 +197,10 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
               ),
             ),
             ListTile(
-              title: const Text('Имя поиска',
-                  style: TextStyle(color: Colors.white)),
+              title: Text(
+                _searchName == null ? 'Имя поиска' : 'Имя поиска: $_searchName',
+                style: const TextStyle(color: Colors.white),
+              ),
               onTap: _showSearchNameDialog,
             ),
             ListTile(
@@ -237,11 +257,12 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
     );
   }
 
+  // ----- Вкладки -----
   Widget _buildNewVolunteersTab() {
     final viewModel = context.read<VolunteersViewModel>();
     return Stack(
       children: [
-        _buildVolunteersList(context, 'Новые'),
+        _buildVolunteersList('Новые'),
         Positioned(
           bottom: 16,
           right: 16,
@@ -303,7 +324,7 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
     final viewModel = context.read<VolunteersViewModel>();
     return Stack(
       children: [
-        _buildVolunteersList(context, 'Отправленные'),
+        _buildVolunteersList('Отправленные'),
         Positioned(
           bottom: 16,
           right: 16,
@@ -334,7 +355,7 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
   Widget _buildAllVolunteersTab() {
     return Stack(
       children: [
-        _buildVolunteersList(context, 'Все'),
+        _buildVolunteersList('Все'),
         Positioned(
           bottom: 16,
           right: 16,
@@ -348,15 +369,81 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
     );
   }
 
+  Widget _buildVolunteersList(String tabName) {
+    return Consumer<VolunteersViewModel>(
+      builder: (context, viewModel, child) {
+        List<Volunteer> volunteers = [];
+        switch (tabName) {
+          case 'Новые':
+            volunteers = viewModel.volunteers.where((v) => !v.isSent).toList();
+            break;
+          case 'Отправленные':
+            volunteers = viewModel.volunteers.where((v) => v.isSent).toList();
+            break;
+          case 'Все':
+            volunteers = viewModel.volunteers;
+            break;
+        }
+
+        return ListView.builder(
+          itemCount: volunteers.length,
+          itemBuilder: (context, index) {
+            final volunteer = volunteers[index];
+            return VolunteerCard(
+              volunteer: volunteer,
+              groupName: volunteer.groupId?.toString(),
+              onEdit: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddManuallyScreen(
+                      volunteerId: volunteer.index,
+                      size: '5',
+                    ),
+                  ),
+                );
+              },
+              onChangeStatus: () async {
+                final newStatus =
+                    volunteer.status == 'Активный' ? 'Уехал' : 'Активный';
+                final updatedVolunteer = volunteer.copyWith(
+                  status: newStatus,
+                  isSent: newStatus == 'Активный' ? false : volunteer.isSent,
+                );
+                await viewModel.updateVolunteer(updatedVolunteer);
+
+                if (tabName == 'Отправленные' && newStatus == 'Активный') {
+                  setState(() {
+                    _tabController.animateTo(0);
+                  });
+                }
+              },
+              onChangeTime: () async {
+                final newTime =
+                    await _pickTime(context, volunteer.timeForSearch);
+                if (newTime != null) {
+                  await viewModel.updateVolunteer(
+                      volunteer.copyWith(timeForSearch: newTime));
+                }
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _showSearchNameDialog() {
+    _nameSearchController.text = _searchName ?? '';
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF303030),
         title: const Text('Введите имя поиска',
             style: TextStyle(color: Colors.white)),
-        content: const TextField(
-          decoration: InputDecoration(
+        content: TextField(
+          controller: _nameSearchController,
+          decoration: const InputDecoration(
             hintText: 'Имя поиска',
             hintStyle: TextStyle(color: Colors.grey),
             focusedBorder: UnderlineInputBorder(
@@ -364,7 +451,7 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
             enabledBorder: UnderlineInputBorder(
                 borderSide: BorderSide(color: Colors.white)),
           ),
-          style: TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.white),
         ),
         actions: [
           TextButton(
@@ -376,7 +463,14 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
           TextButton(
             style:
                 TextButton.styleFrom(backgroundColor: const Color(0xFFF96800)),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              final name = _nameSearchController.text.trim();
+              setState(() {
+                _searchName = name;
+              });
+              _saveSearchName(name);
+              Navigator.pop(context);
+            },
             child: const Text('ОК', style: TextStyle(color: Colors.white)),
           ),
         ],
@@ -412,62 +506,6 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildVolunteersList(BuildContext context, String tabName) {
-    return Consumer<VolunteersViewModel>(
-      builder: (context, viewModel, child) {
-        List<Volunteer> volunteers = [];
-
-        switch (tabName) {
-          case 'Новые':
-            volunteers = viewModel.volunteers.where((v) => !v.isSent).toList();
-            break;
-          case 'Отправленные':
-            volunteers = viewModel.volunteers.where((v) => v.isSent).toList();
-            break;
-          case 'Все':
-            volunteers = viewModel.volunteers;
-            break;
-        }
-
-        return ListView.builder(
-          itemCount: volunteers.length,
-          itemBuilder: (context, index) {
-            final volunteer = volunteers[index];
-            return VolunteerCard(
-              volunteer: volunteer,
-              groupName: volunteer.groupId?.toString(),
-              onEdit: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AddManuallyScreen(
-                      volunteerId: volunteer.index,
-                      size: '5',
-                    ),
-                  ),
-                );
-              },
-              onChangeStatus: () async {
-                final newStatus =
-                    volunteer.status == 'Активный' ? 'Уехал' : 'Активный';
-                await viewModel
-                    .updateVolunteer(volunteer.copyWith(status: newStatus));
-              },
-              onChangeTime: () async {
-                final newTime =
-                    await _pickTime(context, volunteer.timeForSearch);
-                if (newTime != null) {
-                  await viewModel.updateVolunteer(
-                      volunteer.copyWith(timeForSearch: newTime));
-                }
-              },
-            );
-          },
-        );
-      },
     );
   }
 }

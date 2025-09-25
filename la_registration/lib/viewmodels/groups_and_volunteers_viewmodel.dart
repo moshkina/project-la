@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../data/group.dart';
 import '../data/groups_dao.dart';
 import '../data/volunteer.dart';
@@ -8,21 +7,25 @@ import '../data/group_callsign.dart';
 
 class GroupsViewModel extends ChangeNotifier {
   final GroupsDao _groupsDao;
-
-  GroupsViewModel(this._groupsDao);
   List<Group> _groups = [];
+
   List<Group> get groups => _groups;
-  Future<List<Group>> getAllGroups() => _groupsDao.getAllGroups();
-  final Map<GroupCallsigns, List<Group>> _groupsByCallsign = {};
+
+  GroupsViewModel(this._groupsDao) {
+    _loadAllGroups();
+  }
+
+  Future<void> _loadAllGroups() async {
+    _groups = await _groupsDao.getAllGroups();
+    notifyListeners();
+  }
 
   List<Group> getGroupsForCallsign(GroupCallsigns callsign) {
-    return _groupsByCallsign[callsign] ?? [];
+    return _groups.where((group) => group.groupCallsign == callsign).toList();
   }
 
   Future<void> loadGroupsByCallsign(GroupCallsigns callsign) async {
-    final groups = await _groupsDao.getGroupsByCallsignNotArchived(callsign);
-    _groupsByCallsign[callsign] = groups;
-    notifyListeners();
+    await _loadAllGroups();
   }
 
   Future<List<Group>> getGroupByCallsignNotArchived(String groupCallsign) {
@@ -34,8 +37,8 @@ class GroupsViewModel extends ChangeNotifier {
   }
 
   Future<List<Group>> getActiveGroups(String groupCallsign) async {
-    final groups = await _groupsDao.getAllGroups();
-    return groups
+    await _loadAllGroups();
+    return _groups
         .where((group) => group.groupCallsign.name == groupCallsign)
         .toList();
   }
@@ -66,25 +69,25 @@ class GroupsViewModel extends ChangeNotifier {
 
   Future<int> insertGroup(Group group) async {
     final id = await _groupsDao.insertGroup(group);
-    notifyListeners();
+    await _loadAllGroups();
     return id;
   }
 
   Future<int> updateGroup(Group group) async {
     final id = await _groupsDao.updateGroup(group);
-    notifyListeners();
+    await _loadAllGroups();
     return id;
   }
 
   Future<int> deleteGroup(Group group) async {
     final id = await _groupsDao.deleteGroup(group);
-    notifyListeners();
+    await _loadAllGroups();
     return id;
   }
 
   Future<void> deleteArchivedGroups() async {
     await _groupsDao.deleteArchivedGroups();
-    notifyListeners();
+    await _loadAllGroups();
   }
 
   Future<Group?> getGroupById(int id) => _groupsDao.getGroupById(id);
@@ -98,13 +101,14 @@ class GroupsViewModel extends ChangeNotifier {
 
 class VolunteersViewModel extends ChangeNotifier {
   final VolunteersDao _volunteersDao;
+  final GroupsDao _groupsDao;
   List<Volunteer> _volunteers = [];
   String _searchQuery = '';
 
   List<Volunteer> get volunteers => _filterVolunteers(_volunteers);
   String get searchQuery => _searchQuery;
 
-  VolunteersViewModel(this._volunteersDao) {
+  VolunteersViewModel(this._volunteersDao, this._groupsDao) {
     loadVolunteers();
   }
 
@@ -113,9 +117,13 @@ class VolunteersViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<List<Volunteer>> getVolunteersWithoutGroup() async {
+    final all = await _volunteersDao.getAllVolunteers();
+    return all.where((v) => v.groupId == null || v.groupId == 0).toList();
+  }
+
   List<Volunteer> _filterVolunteers(List<Volunteer> volunteers) {
     if (_searchQuery.isEmpty) return volunteers;
-
     final lowerCaseQuery = _searchQuery.toLowerCase();
     return volunteers.where((volunteer) {
       return volunteer.fullName.toLowerCase().contains(lowerCaseQuery) ||
@@ -151,18 +159,11 @@ class VolunteersViewModel extends ChangeNotifier {
 ''').join('\n====================\n');
   }
 
-  Future<void> sendDepartedVolunteersToInformant() async {
-    final departedVolunteers =
-        _volunteers.where((v) => v.status == 'уехал').toList();
-    notifyListeners();
-  }
-
   Future<List<Volunteer>> getAllVolunteers() =>
       _volunteersDao.getAllVolunteers();
 
-  Future<List<Volunteer>> getVolunteersByGroupId(int groupId) {
-    return _volunteersDao.getVolunteersByGroupId(groupId);
-  }
+  Future<List<Volunteer>> getVolunteersByGroupId(int groupId) =>
+      _volunteersDao.getVolunteersByGroupId(groupId);
 
   Future<List<Volunteer>> getSentVolunteers() =>
       _volunteersDao.getSentVolunteers();
@@ -202,16 +203,12 @@ class VolunteersViewModel extends ChangeNotifier {
 
   Future<List<Volunteer>> get activeVolunteers async {
     final volunteers = await _volunteersDao.getAllVolunteers();
-    return volunteers
-        .where((volunteer) => volunteer.status == "Active")
-        .toList();
+    return volunteers.where((v) => v.status == "Active").toList();
   }
 
   Future<List<Volunteer>> get archivedVolunteers async {
     final volunteers = await _volunteersDao.getAllVolunteers();
-    return volunteers
-        .where((volunteer) => volunteer.status == "Archived")
-        .toList();
+    return volunteers.where((v) => v.status == "Archived").toList();
   }
 
   Future<void> archiveVolunteer(int volunteerId) async {
@@ -227,6 +224,38 @@ class VolunteersViewModel extends ChangeNotifier {
     if (volunteer != null) {
       volunteer.status = "Active";
       await updateVolunteer(volunteer);
+    }
+  }
+
+  Future<void> deleteVolunteerGlobally(int? uniqueId) async {
+    if (uniqueId == null) return;
+
+    try {
+      Volunteer? volunteer;
+
+      for (final v in _volunteers) {
+        if (v.uniqueId == uniqueId) {
+          volunteer = v;
+          break;
+        }
+      }
+
+      if (volunteer != null) {
+        if (volunteer.groupId != null) {
+          final group = await _groupsDao.getGroupById(volunteer.groupId!);
+          if (group != null && group.elderOfGroupId == volunteer.uniqueId) {
+            final archivedGroup = group.copyWith(archived: 'true');
+            await _groupsDao.updateGroup(archivedGroup);
+          }
+        }
+
+        await _volunteersDao.deleteVolunteer(volunteer);
+      }
+
+      await loadVolunteers();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Ошибка при глобальном удалении волонтёра: $e');
     }
   }
 }
