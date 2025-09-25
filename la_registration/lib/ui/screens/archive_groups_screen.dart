@@ -8,8 +8,13 @@ import '../widgets/group_card.dart';
 
 class ArchiveGroupsScreen extends StatefulWidget {
   final GroupCallsigns groupCallsign;
+  final String searchQuery;
 
-  const ArchiveGroupsScreen({super.key, required this.groupCallsign});
+  const ArchiveGroupsScreen({
+    super.key,
+    required this.groupCallsign,
+    this.searchQuery = '',
+  });
 
   @override
   State<ArchiveGroupsScreen> createState() => _ArchiveGroupsScreenState();
@@ -37,7 +42,7 @@ class _ArchiveGroupsScreenState extends State<ArchiveGroupsScreen> {
       builder: (context, groupsViewModel, child) {
         // Фильтруем архивные группы для текущего callsign
         final archivedGroups = groupsViewModel.groups
-            .where((group) => 
+            .where((group) =>
                 group.groupCallsign == widget.groupCallsign &&
                 group.archived == 'true')
             .toList();
@@ -58,7 +63,8 @@ class _ArchiveGroupsScreenState extends State<ArchiveGroupsScreen> {
                     return FutureBuilder<Volunteer?>(
                       future: _getElderForGroup(group),
                       builder: (context, elderSnapshot) {
-                        if (elderSnapshot.connectionState == ConnectionState.waiting) {
+                        if (elderSnapshot.connectionState ==
+                            ConnectionState.waiting) {
                           return const ListTile(
                             title: CircularProgressIndicator(),
                           );
@@ -81,28 +87,21 @@ class _ArchiveGroupsScreenState extends State<ArchiveGroupsScreen> {
                       context: context,
                       builder: (context) => AlertDialog(
                         backgroundColor: Colors.grey[900],
-                        title: const Text(
-                          'Очистить архив?', 
-                          style: TextStyle(color: Colors.white)
-                        ),
+                        title: const Text('Очистить архив?',
+                            style: TextStyle(color: Colors.white)),
                         content: const Text(
-                          'Все архивные группы будут удалены безвозвратно.', 
-                          style: TextStyle(color: Colors.white70)
-                        ),
+                            'Все архивные группы будут удалены безвозвратно.',
+                            style: TextStyle(color: Colors.white70)),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
-                            child: const Text(
-                              'Отмена', 
-                              style: TextStyle(color: Colors.white)
-                            ),
+                            child: const Text('Отмена',
+                                style: TextStyle(color: Colors.white)),
                           ),
                           TextButton(
                             onPressed: () => Navigator.pop(context, true),
-                            child: const Text(
-                              'Удалить', 
-                              style: TextStyle(color: Colors.red)
-                            ),
+                            child: const Text('Удалить',
+                                style: TextStyle(color: Colors.red)),
                           ),
                         ],
                       ),
