@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../data/group.dart';
 import '../data/groups_dao.dart';
 import '../data/volunteer.dart';
@@ -9,14 +8,13 @@ import '../data/group_callsign.dart';
 class GroupsViewModel extends ChangeNotifier {
   final GroupsDao _groupsDao;
   List<Group> _groups = [];
-  
+
   List<Group> get groups => _groups;
 
   GroupsViewModel(this._groupsDao) {
-    _loadAllGroups(); // Загружаем группы при создании
+    _loadAllGroups();
   }
 
-  // Загрузка всех групп
   Future<void> _loadAllGroups() async {
     _groups = await _groupsDao.getAllGroups();
     notifyListeners();
@@ -27,7 +25,7 @@ class GroupsViewModel extends ChangeNotifier {
   }
 
   Future<void> loadGroupsByCallsign(GroupCallsigns callsign) async {
-    await _loadAllGroups(); // Просто перезагружаем все группы
+    await _loadAllGroups();
   }
 
   Future<List<Group>> getGroupByCallsignNotArchived(String groupCallsign) {
@@ -39,7 +37,7 @@ class GroupsViewModel extends ChangeNotifier {
   }
 
   Future<List<Group>> getActiveGroups(String groupCallsign) async {
-    await _loadAllGroups(); // Обновляем кэш
+    await _loadAllGroups();
     return _groups
         .where((group) => group.groupCallsign.name == groupCallsign)
         .toList();
@@ -71,25 +69,25 @@ class GroupsViewModel extends ChangeNotifier {
 
   Future<int> insertGroup(Group group) async {
     final id = await _groupsDao.insertGroup(group);
-    await _loadAllGroups(); // Перезагружаем группы после вставки
+    await _loadAllGroups();
     return id;
   }
 
   Future<int> updateGroup(Group group) async {
     final id = await _groupsDao.updateGroup(group);
-    await _loadAllGroups(); // Перезагружаем группы после обновления
+    await _loadAllGroups();
     return id;
   }
 
   Future<int> deleteGroup(Group group) async {
     final id = await _groupsDao.deleteGroup(group);
-    await _loadAllGroups(); // Перезагружаем группы после удаления
+    await _loadAllGroups();
     return id;
   }
 
   Future<void> deleteArchivedGroups() async {
     await _groupsDao.deleteArchivedGroups();
-    await _loadAllGroups(); // Перезагружаем группы после удаления
+    await _loadAllGroups();
   }
 
   Future<Group?> getGroupById(int id) => _groupsDao.getGroupById(id);
@@ -103,13 +101,14 @@ class GroupsViewModel extends ChangeNotifier {
 
 class VolunteersViewModel extends ChangeNotifier {
   final VolunteersDao _volunteersDao;
+  final GroupsDao _groupsDao;
   List<Volunteer> _volunteers = [];
   String _searchQuery = '';
 
   List<Volunteer> get volunteers => _filterVolunteers(_volunteers);
   String get searchQuery => _searchQuery;
 
-  VolunteersViewModel(this._volunteersDao) {
+  VolunteersViewModel(this._volunteersDao, this._groupsDao) {
     loadVolunteers();
   }
 
@@ -118,14 +117,13 @@ class VolunteersViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-Future<List<Volunteer>> getVolunteersWithoutGroup() async {
-  final allVolunteers = await getAllVolunteers();
-  return allVolunteers.where((v) => v.groupId == null).toList();
-}
+  Future<List<Volunteer>> getVolunteersWithoutGroup() async {
+    final all = await _volunteersDao.getAllVolunteers();
+    return all.where((v) => v.groupId == null || v.groupId == 0).toList();
+  }
 
   List<Volunteer> _filterVolunteers(List<Volunteer> volunteers) {
     if (_searchQuery.isEmpty) return volunteers;
-
     final lowerCaseQuery = _searchQuery.toLowerCase();
     return volunteers.where((volunteer) {
       return volunteer.fullName.toLowerCase().contains(lowerCaseQuery) ||
@@ -161,18 +159,11 @@ Future<List<Volunteer>> getVolunteersWithoutGroup() async {
 ''').join('\n====================\n');
   }
 
-  Future<void> sendDepartedVolunteersToInformant() async {
-    final departedVolunteers =
-        _volunteers.where((v) => v.status == 'уехал').toList();
-    notifyListeners();
-  }
-
   Future<List<Volunteer>> getAllVolunteers() =>
       _volunteersDao.getAllVolunteers();
 
-  Future<List<Volunteer>> getVolunteersByGroupId(int groupId) {
-    return _volunteersDao.getVolunteersByGroupId(groupId);
-  }
+  Future<List<Volunteer>> getVolunteersByGroupId(int groupId) =>
+      _volunteersDao.getVolunteersByGroupId(groupId);
 
   Future<List<Volunteer>> getSentVolunteers() =>
       _volunteersDao.getSentVolunteers();
@@ -212,16 +203,12 @@ Future<List<Volunteer>> getVolunteersWithoutGroup() async {
 
   Future<List<Volunteer>> get activeVolunteers async {
     final volunteers = await _volunteersDao.getAllVolunteers();
-    return volunteers
-        .where((volunteer) => volunteer.status == "Active")
-        .toList();
+    return volunteers.where((v) => v.status == "Active").toList();
   }
 
   Future<List<Volunteer>> get archivedVolunteers async {
     final volunteers = await _volunteersDao.getAllVolunteers();
-    return volunteers
-        .where((volunteer) => volunteer.status == "Archived")
-        .toList();
+    return volunteers.where((v) => v.status == "Archived").toList();
   }
 
   Future<void> archiveVolunteer(int volunteerId) async {
@@ -237,6 +224,38 @@ Future<List<Volunteer>> getVolunteersWithoutGroup() async {
     if (volunteer != null) {
       volunteer.status = "Active";
       await updateVolunteer(volunteer);
+    }
+  }
+
+  Future<void> deleteVolunteerGlobally(int? uniqueId) async {
+    if (uniqueId == null) return;
+
+    try {
+      Volunteer? volunteer;
+
+      for (final v in _volunteers) {
+        if (v.uniqueId == uniqueId) {
+          volunteer = v;
+          break;
+        }
+      }
+
+      if (volunteer != null) {
+        if (volunteer.groupId != null) {
+          final group = await _groupsDao.getGroupById(volunteer.groupId!);
+          if (group != null && group.elderOfGroupId == volunteer.uniqueId) {
+            final archivedGroup = group.copyWith(archived: 'true');
+            await _groupsDao.updateGroup(archivedGroup);
+          }
+        }
+
+        await _volunteersDao.deleteVolunteer(volunteer);
+      }
+
+      await loadVolunteers();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Ошибка при глобальном удалении волонтёра: $e');
     }
   }
 }

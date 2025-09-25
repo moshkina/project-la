@@ -10,8 +10,8 @@ class GroupCard extends StatelessWidget {
   final Volunteer? elder;
 
   const GroupCard({
-    super.key, 
-    required this.group, 
+    super.key,
+    required this.group,
     required this.isArchived,
     this.elder,
   });
@@ -44,20 +44,12 @@ class GroupCard extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          // Отладочная информация (можно убрать потом)
-                          if (group.id != null)
-                            Text(
-                              'ID: ${group.id}',
-                              style: const TextStyle(
-                                color: Colors.white30,
-                                fontSize: 10,
-                              ),
-                            ),
                         ],
                       ),
                     ),
                     PopupMenuButton<String>(
-                      icon: const Icon(Icons.more_vert, color: Colors.white, size: 20),
+                      icon: const Icon(Icons.more_vert,
+                          color: Colors.white, size: 20),
                       color: Colors.black,
                       onSelected: (value) async {
                         if (value == 'archive' && !isArchived) {
@@ -65,11 +57,12 @@ class GroupCard extends StatelessWidget {
                           await groupsViewModel.updateGroup(updatedGroup);
                           // ViewModel автоматически уведомит всех Consumer'ов
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Группа отправлена в архив')),
+                            const SnackBar(
+                                content: Text('Группа отправлена в архив')),
                           );
                         } else if (value == 'details') {
                           Navigator.pushNamed(
-                            context, 
+                            context,
                             '/group_details',
                             arguments: {
                               'groupId': group.id,
@@ -81,45 +74,48 @@ class GroupCard extends StatelessWidget {
                       itemBuilder: (context) => [
                         const PopupMenuItem(
                           value: 'details',
-                          child: Text('Подробнее', style: TextStyle(color: Colors.white)),
+                          child: Text('Подробнее',
+                              style: TextStyle(color: Colors.white)),
                         ),
                         if (!isArchived)
                           const PopupMenuItem(
                             value: 'archive',
-                            child: Text('Отправить в архив', 
+                            child: Text('Отправить в архив',
                                 style: TextStyle(color: Colors.white)),
                           ),
                       ],
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 8),
-                
+
                 // Старший группы
                 if (elder != null && elder!.fullName.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 6.0),
                     child: Text(
                       'Старший: ${elder!.fullName}',
-                      style: const TextStyle(color: Colors.white70, fontSize: 14),
+                      style:
+                          const TextStyle(color: Colors.white70, fontSize: 14),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                
+
                 // Задача группы
                 if (group.task != null && group.task!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 6.0),
                     child: Text(
                       'Задача: ${group.task}',
-                      style: const TextStyle(color: Colors.white70, fontSize: 14),
+                      style:
+                          const TextStyle(color: Colors.white70, fontSize: 14),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                
+
                 // Заметка (только если есть)
                 if (group.notes != null && group.notes!.isNotEmpty)
                   Padding(
@@ -135,19 +131,20 @@ class GroupCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                
+
                 // Оборудование (кратко)
                 if (_hasEquipment())
                   Padding(
                     padding: const EdgeInsets.only(bottom: 6.0),
                     child: Text(
                       _getEquipmentSummary(),
-                      style: const TextStyle(color: Colors.white54, fontSize: 12),
+                      style:
+                          const TextStyle(color: Colors.white54, fontSize: 12),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                
+
                 // Отладочная информация о состоянии
                 if (group.archived == 'true')
                   Padding(
@@ -168,20 +165,20 @@ class GroupCard extends StatelessWidget {
       },
     );
   }
-  
+
   // Проверяем есть ли оборудование
   bool _hasEquipment() {
-    return group.navigators.isNotEmpty || 
-           (group.radios != null && group.radios!.isNotEmpty) || 
-           (group.compasses != null && group.compasses!.isNotEmpty) ||
-           (group.flashlights != null && group.flashlights!.isNotEmpty) ||
-           (group.otherEquipment != null && group.otherEquipment!.isNotEmpty);
+    return group.navigators.isNotEmpty ||
+        (group.radios != null && group.radios!.isNotEmpty) ||
+        (group.compasses != null && group.compasses!.isNotEmpty) ||
+        (group.flashlights != null && group.flashlights!.isNotEmpty) ||
+        (group.otherEquipment != null && group.otherEquipment!.isNotEmpty);
   }
-  
+
   // Вспомогательный метод для краткого отображения оборудования
   String _getEquipmentSummary() {
     final equipment = [];
-    
+
     if (group.navigators.isNotEmpty) {
       equipment.add('Навигаторы: ${group.navigators}');
     }
@@ -197,7 +194,7 @@ class GroupCard extends StatelessWidget {
     if (group.otherEquipment != null && group.otherEquipment!.isNotEmpty) {
       equipment.add('Прочее: ${group.otherEquipment}');
     }
-    
+
     return equipment.isNotEmpty ? 'Оборудование: ${equipment.join(", ")}' : '';
   }
 }

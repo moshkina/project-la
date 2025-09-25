@@ -32,7 +32,7 @@ class BarCodeScannerScreenState extends State<BarCodeScannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan QR Code')),
+      appBar: AppBar(title: const Text('Сканирование QR-кода')),
       body: Column(
         children: [
           Expanded(
@@ -46,7 +46,7 @@ class BarCodeScannerScreenState extends State<BarCodeScannerScreen> {
             flex: 1,
             child: Center(
               child: Text(
-                result ?? "Scan a QR Code",
+                result ?? "Отсканируйте QR-код",
                 style: const TextStyle(fontSize: 18),
               ),
             ),
@@ -73,7 +73,6 @@ class BarCodeScannerScreenState extends State<BarCodeScannerScreen> {
     if (scanResult == null) return;
 
     try {
-      // Пример данных: "John Doe\n1234567890"
       List<String> scanResultArray = scanResult.split("\n");
 
       String fullName = scanResultArray[0];
@@ -81,33 +80,32 @@ class BarCodeScannerScreenState extends State<BarCodeScannerScreen> {
       String nickName = scanResultArray[2];
       String region = scanResultArray[3];
       String phoneNumber = scanResultArray[4];
-      String car= scanResultArray[5] ?? "";
+      String car = scanResultArray[5] ?? "";
 
-      // Создание нового объекта Volunteer с обязательными полями
       final volunteer = Volunteer(
-        uniqueId: DateTime.now().millisecondsSinceEpoch, // Уникальный ID
-        index: 0, // Используем значение по умолчанию для index
+        uniqueId: DateTime.now().millisecondsSinceEpoch,
+        index: 0,
         fullName: fullName,
         phoneNumber: phoneNumber,
         callSign: callSign,
         nickName: nickName,
         region: region,
         car: car,
-        status: "Активный", // Статус по умолчанию
-        isSent: false, // Значение по умолчанию
-        notifyThatLeft: "false", // Значение по умолчанию
-        timeForSearch: "", // Значение по умолчанию
-        groupId: null, // Если нужно, передайте сюда ID группы или оставьте null
+        status: "Активный",
+        isSent: false,
+        notifyThatLeft: "false",
+        timeForSearch: "",
+        groupId: null,
       );
 
       context.read<VolunteersViewModel>().insertVolunteer(volunteer);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Volunteer $fullName added successfully!')),
+        SnackBar(content: Text('Волонтер $fullName успешно добавлен!')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to process QR Code')),
+        const SnackBar(content: Text('Ошибка обработки QR-кода')),
       );
     }
   }

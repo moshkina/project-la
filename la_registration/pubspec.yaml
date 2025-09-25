@@ -47,6 +47,8 @@ dependencies:
   cupertino_icons: ^1.0.6
   async: ^2.11.0
   icons_launcher: ^3.0.2
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   floor_generator: ^1.4.1
@@ -74,6 +76,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+
+  generate: true
 
   # To add assets to your application, add an assets section, like this:
   # assets:

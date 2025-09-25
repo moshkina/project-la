@@ -27,10 +27,11 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
   late TextEditingController _flashlightsController;
   late TextEditingController _otherEquipmentController;
   late TextEditingController _notesController;
+
   late Future<Group?> _groupFuture;
   Group? _currentGroup;
-  List<Volunteer> _volunteers = []; // Храним волонтёров локально
-  Volunteer? _elder; // Храним старшего локально
+  List<Volunteer> _volunteers = [];
+  Volunteer? _elder;
 
   @override
   void initState() {
@@ -42,47 +43,9 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     _flashlightsController = TextEditingController();
     _otherEquipmentController = TextEditingController();
     _notesController = TextEditingController();
+
     _loadGroupData();
     _loadVolunteers();
-  }
-
-  String _formatDateTime(String isoDate) {
-    try {
-      final date = DateTime.parse(isoDate);
-      return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-    } catch (e) {
-      return isoDate;
-    }
-  }
-
-  void _loadGroupData() {
-    _groupFuture = context.read<GroupsViewModel>().getGroupById(widget.groupId)
-      ..then((group) {
-        if (mounted && group != null) {
-          setState(() {
-            _currentGroup = group;
-            _initializeControllers(group);
-          });
-        }
-      });
-  }
-
-  void _loadVolunteers() async {
-    try {
-      final volunteersViewModel = context.read<VolunteersViewModel>();
-      final volunteers = await volunteersViewModel.getVolunteersByGroupId(widget.groupId);
-      
-      if (mounted) {
-        setState(() {
-          _volunteers = volunteers;
-          _elder = volunteers.firstWhere(
-            (v) => v.uniqueId == _currentGroup?.elderOfGroupId
-          );
-        });
-      }
-    } catch (e) {
-      print('Error loading volunteers: $e');
-    }
   }
 
   @override
@@ -97,121 +60,56 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: const Text('Детали группы', style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFFF96800),
-      ),
-      body: FutureBuilder<Group?>(
-        future: _groupFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Ошибка: ${snapshot.error}', style: const TextStyle(color: Colors.white)));
-          } else if (!snapshot.hasData || snapshot.data == null) {
-            return const Center(child: Text('Группа не найдена', style: TextStyle(color: Colors.white)));
-          }
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildGroupHeader(_currentGroup!),
-                const SizedBox(height: 20),
-                if (_elder != null) _buildElderCard(_elder!),
-                const SizedBox(height: 20),
-                _buildTaskSection(),
-                const SizedBox(height: 20),
-                _buildEquipmentSection(),
-                const SizedBox(height: 20),
-                _buildNotesSection(),
-                const SizedBox(height: 20),
-                _buildMembersSection(
-                  _volunteers.where((v) => _elder == null || v.uniqueId != _elder!.uniqueId).toList()
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _currentGroup != null 
-            ? () => _saveGroup(context, _currentGroup!)
-            : null,
-        backgroundColor: const Color(0xFFF96800),
-        child: const Icon(Icons.save, color: Colors.white),
-      ),
-    );
-  }
-
-  void _addMember() async {
-    final volunteersViewModel = context.read<VolunteersViewModel>();
-    final availableVolunteers = await volunteersViewModel.getVolunteersWithoutGroup();
-
-    if (!mounted) return;
-
-    final selectedVolunteer = await showDialog<Volunteer>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: const Text('Добавить участника', style: TextStyle(color: Colors.white)),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: availableVolunteers.length,
-            itemBuilder: (context, index) {
-              final volunteer = availableVolunteers[index];
-              return ListTile(
-                title: Text(volunteer.fullName, style: const TextStyle(color: Colors.white)),
-                onTap: () => Navigator.pop(context, volunteer),
-              );
-            },
-          ),
-        ),
-      ),
-    );
-
-    if (selectedVolunteer != null) {
-      await volunteersViewModel.updateVolunteer(
-        selectedVolunteer.copyWith(groupId: widget.groupId),
-      );
-      // Обновляем локальный список вместо полной перестройки
-      _loadVolunteers();
+  String _formatDateTime(String isoDate) {
+    try {
+      final date = DateTime.parse(isoDate);
+      return '${date.day.toString().padLeft(2, '0')}.'
+          '${date.month.toString().padLeft(2, '0')}.'
+          '${date.year} '
+          '${date.hour.toString().padLeft(2, '0')}:'
+          '${date.minute.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return isoDate;
     }
   }
 
-  void _editMember(Volunteer volunteer) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: Text('Редактировать ${volunteer.fullName}', style: const TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: const Text('Удалить из группы', style: TextStyle(color: Colors.white)),
-              leading: const Icon(Icons.delete, color: Colors.red),
-              onTap: () => Navigator.pop(context, true),
-            ),
-          ],
-        ),
-      ),
-    );
+  void _loadGroupData() {
+    _groupFuture = context.read<GroupsViewModel>().getGroupById(widget.groupId)
+      ..then((group) {
+        if (!mounted) return;
+        if (group != null) {
+          setState(() {
+            _currentGroup = group;
+            _initializeControllers(group);
+          });
+          _loadVolunteers();
+        }
+      });
+  }
 
-    if (result == true) {
+  Future<void> _loadVolunteers() async {
+    try {
       final volunteersViewModel = context.read<VolunteersViewModel>();
-      await volunteersViewModel.updateVolunteer(
-        volunteer.copyWith(groupId: null),
-      );
-      // Обновляем локальный список вместо полной перестройки
-      _loadVolunteers();
+      final volunteers =
+          await volunteersViewModel.getVolunteersByGroupId(widget.groupId);
+
+      if (!mounted) return;
+
+      Volunteer? elder;
+      if (_currentGroup != null && _currentGroup!.elderOfGroupId != null) {
+        elder = volunteers
+            .where((v) => v.uniqueId == _currentGroup!.elderOfGroupId)
+            .toList()
+            .cast<Volunteer?>()
+            .firstOrNull;
+      }
+
+      setState(() {
+        _volunteers = volunteers;
+        _elder = elder;
+      });
+    } catch (e) {
+      debugPrint('Error loading volunteers: $e');
     }
   }
 
@@ -222,7 +120,79 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     _compassesController.text = group.compasses ?? '';
     _flashlightsController.text = group.flashlights ?? '';
     _otherEquipmentController.text = group.otherEquipment ?? '';
-    _notesController.text = group.notes ?? ''; // Инициализируем заметки
+    _notesController.text = group.notes ?? '';
+  }
+
+  Future<void> _addMember() async {
+    final volunteersViewModel = context.read<VolunteersViewModel>();
+    final availableVolunteers =
+        await volunteersViewModel.getVolunteersWithoutGroup();
+
+    if (!mounted) return;
+
+    final selectedVolunteer = await showDialog<Volunteer>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text('Добавить участника',
+            style: TextStyle(color: Colors.white)),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: availableVolunteers.length,
+            itemBuilder: (context, index) {
+              final volunteer = availableVolunteers[index];
+              return ListTile(
+                title: Text(volunteer.fullName,
+                    style: const TextStyle(color: Colors.white)),
+                subtitle: Text(volunteer.callSign,
+                    style: const TextStyle(color: Colors.white70)),
+                onTap: () => Navigator.pop(context, volunteer),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, null),
+            child: const Text('Отмена', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (selectedVolunteer != null) {
+      await volunteersViewModel
+          .updateVolunteer(selectedVolunteer.copyWith(groupId: widget.groupId));
+      await _loadVolunteers();
+    }
+  }
+
+  Future<void> _saveGroup(BuildContext context, Group group) async {
+    final updatedGroup = group.copyWith(
+      task: _taskController.text,
+      navigators: _navigatorsController.text,
+      radios: _radiosController.text,
+      compasses: _compassesController.text,
+      flashlights: _flashlightsController.text,
+      otherEquipment: _otherEquipmentController.text,
+      notes: _notesController.text,
+    );
+
+    try {
+      await context.read<GroupsViewModel>().updateGroup(updatedGroup);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Группа успешно обновлена')),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка при сохранении: $e')),
+      );
+    }
   }
 
   Widget _buildGroupHeader(Group group) {
@@ -232,15 +202,11 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
         Text(
           '${group.groupCallsign.getGroupCallsignAsString().split('.').last} №${group.numberOfGroup}',
           style: const TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
+              color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
         ),
-        Text(
-          'Создана: ${_formatDateTime(group.dateOfCreation)}',
-          style: const TextStyle(color: Colors.white70),
-        ),
+        const SizedBox(height: 6),
+        Text('Создана: ${_formatDateTime(group.dateOfCreation)}',
+            style: const TextStyle(color: Colors.white70)),
       ],
     );
   }
@@ -249,14 +215,14 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Старший группы:',
-          style: TextStyle(color: Colors.white, fontSize: 18),
-        ),
+        const Text('Старший группы:',
+            style: TextStyle(color: Colors.white, fontSize: 18)),
         const SizedBox(height: 8),
         VolunteerCard(
           volunteer: elder,
           groupName: 'Старший',
+          isInGroupContext: true,
+          onRemoveFromGroup: _loadVolunteers,
         ),
       ],
     );
@@ -266,10 +232,8 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Задача группы:',
-          style: TextStyle(color: Colors.white, fontSize: 18),
-        ),
+        const Text('Задача группы:',
+            style: TextStyle(color: Colors.white, fontSize: 18)),
         const SizedBox(height: 8),
         TextField(
           controller: _taskController,
@@ -279,9 +243,8 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
             hintText: 'Введите задачу группы...',
             hintStyle: const TextStyle(color: Colors.white54),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Colors.white),
-            ),
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Colors.white)),
             filled: true,
             fillColor: Colors.grey[900],
           ),
@@ -294,10 +257,8 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Оборудование группы:',
-          style: TextStyle(color: Colors.white, fontSize: 18),
-        ),
+        const Text('Оборудование группы:',
+            style: TextStyle(color: Colors.white, fontSize: 18)),
         const SizedBox(height: 8),
         _buildEquipmentField('Навигаторы:', _navigatorsController),
         const SizedBox(height: 8),
@@ -316,12 +277,8 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     return Row(
       children: [
         SizedBox(
-          width: 150,
-          child: Text(
-            label,
-            style: const TextStyle(color: Colors.white70),
-          ),
-        ),
+            width: 150,
+            child: Text(label, style: const TextStyle(color: Colors.white70))),
         Expanded(
           child: TextField(
             controller: controller,
@@ -329,9 +286,8 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
             decoration: InputDecoration(
               contentPadding: const EdgeInsets.symmetric(horizontal: 10),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Colors.white),
-              ),
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Colors.white)),
               filled: true,
               fillColor: Colors.grey[900],
             ),
@@ -345,10 +301,8 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Заметки о группе:',
-          style: TextStyle(color: Colors.white, fontSize: 18),
-        ),
+        const Text('Заметки о группе:',
+            style: TextStyle(color: Colors.white, fontSize: 18)),
         const SizedBox(height: 8),
         TextField(
           controller: _notesController,
@@ -358,9 +312,8 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
             hintText: 'Дополнительная информация о группе...',
             hintStyle: const TextStyle(color: Colors.white54),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Colors.white),
-            ),
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Colors.white)),
             filled: true,
             fillColor: Colors.grey[900],
           ),
@@ -373,27 +326,24 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Участники группы:',
-          style: TextStyle(color: Colors.white, fontSize: 18),
-        ),
+        const Text('Участники группы:',
+            style: TextStyle(color: Colors.white, fontSize: 18)),
         const SizedBox(height: 8),
         if (members.isEmpty)
-          const Text(
-            'Нет участников',
-            style: TextStyle(color: Colors.white70),
-          )
+          const Text('Нет участников', style: TextStyle(color: Colors.white70))
         else
           SizedBox(
-            height: 300, // Фиксированная высота для прокрутки
+            height: 300,
             child: ListView.builder(
               itemCount: members.length,
               itemBuilder: (context, index) {
+                final member = members[index];
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 8.0),
                   child: VolunteerCard(
-                    volunteer: members[index],
-                    onEdit: () => _editMember(members[index]),
+                    volunteer: member,
+                    isInGroupContext: true,
+                    onRemoveFromGroup: _loadVolunteers,
                   ),
                 );
               },
@@ -403,42 +353,69 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
         ElevatedButton(
           onPressed: _addMember,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFF96800),
-          ),
-          child: const Text(
-            'Добавить участника',
-            style: TextStyle(color: Colors.white),
-          ),
+              backgroundColor: const Color(0xFFF96800)),
+          child: const Text('Добавить участника',
+              style: TextStyle(color: Colors.white)),
         ),
       ],
     );
   }
 
-  Future<void> _saveGroup(BuildContext context, Group group) async {
-    final updatedGroup = group.copyWith(
-      task: _taskController.text,
-      navigators: _navigatorsController.text,
-      radios: _radiosController.text,
-      compasses: _compassesController.text,
-      flashlights: _flashlightsController.text,
-      otherEquipment: _otherEquipmentController.text,
-      notes: _notesController.text, // Сохраняем заметки
-    );
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        title:
+            const Text('Детали группы', style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color(0xFFF96800),
+      ),
+      body: FutureBuilder<Group?>(
+        future: _groupFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(
+                child: Text('Ошибка: ${snapshot.error}',
+                    style: const TextStyle(color: Colors.white)));
+          } else if (!snapshot.hasData || snapshot.data == null) {
+            return const Center(
+                child: Text('Группа не найдена',
+                    style: TextStyle(color: Colors.white)));
+          }
 
-    try {
-      await context.read<GroupsViewModel>().updateGroup(updatedGroup);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Группа успешно обновлена')),
-        );
-        Navigator.pop(context); // Выходим после сохранения
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка при сохранении: $e')),
-        );
-      }
-    }
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildGroupHeader(_currentGroup!),
+                const SizedBox(height: 20),
+                if (_elder != null) _buildElderCard(_elder!),
+                const SizedBox(height: 20),
+                _buildTaskSection(),
+                const SizedBox(height: 20),
+                _buildEquipmentSection(),
+                const SizedBox(height: 20),
+                _buildNotesSection(),
+                const SizedBox(height: 20),
+                _buildMembersSection(_volunteers
+                    .where(
+                        (v) => _elder == null || v.uniqueId != _elder!.uniqueId)
+                    .toList()),
+              ],
+            ),
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _currentGroup != null
+            ? () => _saveGroup(context, _currentGroup!)
+            : null,
+        backgroundColor: const Color(0xFFF96800),
+        child: const Icon(Icons.save, color: Colors.white),
+      ),
+    );
   }
 }
