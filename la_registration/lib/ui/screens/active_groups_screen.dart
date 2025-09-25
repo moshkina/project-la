@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:la_registration/data/group.dart';
 import 'package:la_registration/data/group_callsign.dart';
 import 'package:la_registration/viewmodels/groups_and_volunteers_viewmodel.dart';
-import '../widgets/group_card.dart'; // путь к GroupCard (подкорректируйте под ваш проект)
+import '../widgets/group_card.dart';
 
 class ActiveGroupsScreen extends StatefulWidget {
   final GroupCallsigns groupCallsign;
@@ -56,10 +56,12 @@ class _ActiveGroupsScreenState extends State<ActiveGroupsScreen> {
     _futureGroups = Provider.of<GroupsViewModel>(context, listen: false)
         .getGroupByCallsignNotArchived(widget.groupCallsign.name);
     _futureGroups.then((groups) {
-      setState(() {
-        _allGroups = groups;
-        _applyFilter();
-      });
+      if (mounted) {
+        setState(() {
+          _allGroups = groups;
+          _applyFilter();
+        });
+      }
     });
   }
 
@@ -76,87 +78,81 @@ class _ActiveGroupsScreenState extends State<ActiveGroupsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<GroupsViewModel>(
-      builder: (context, groupsViewModel, child) {
-        // Автоматически перезагружаем группы при изменении в ViewModel
-        if (groupsViewModel.groups.isNotEmpty) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          await Navigator.pushNamed(
+            context,
+            '/add_group',
+            arguments: widget.groupCallsign,
+          );
+          // После возврата из добавления группы перезагружаем данные
           _loadGroups();
-        }
+        },
+        backgroundColor: const Color(0xFFF96800),
+        shape: const CircleBorder(),
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+      body: FutureBuilder<List<Group>>(
+        future: _futureGroups,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-        return Scaffold(
-          backgroundColor: Colors.black,
-          floatingActionButton: FloatingActionButton(
-            onPressed: () async {
-              await Navigator.pushNamed(
-                context,
-                '/add_group',
-                arguments: widget.groupCallsign,
-              );
-              // ViewModel автоматически уведомит об изменениях через notifyListeners()
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                'Ошибка: ${snapshot.error}',
+                style: const TextStyle(color: Colors.white),
+              ),
+            );
+          }
+
+          final groups = _searchQuery.isEmpty ? _allGroups : _filteredGroups;
+
+          if (groups.isEmpty) {
+            return Center(
+              child: Text(
+                _searchQuery.isEmpty
+                    ? 'Нет активных групп'
+                    : 'Группы не найдены',
+                style: const TextStyle(color: Colors.white),
+              ),
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh: () async {
+              _loadGroups();
             },
-            backgroundColor: const Color(0xFFF96800),
-            shape: const CircleBorder(),
-            child: const Icon(Icons.add, color: Colors.white),
-          ),
-          body: FutureBuilder<List<Group>>(
-            future: _futureGroups,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              if (snapshot.hasError) {
-                return Center(
-                  child: Text(
-                    'Ошибка: ${snapshot.error}',
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                );
-              }
-
-              final groups = snapshot.data ?? [];
-
-              if (groups.isEmpty) {
-                return const Center(
-                  child: Text(
-                    'Нет активных групп',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                );
-              }
-
-              return RefreshIndicator(
-                onRefresh: () async {
-                  _loadGroups();
-                  setState(() {});
-                },
-                child: ListView.builder(
-                  itemCount: groups.length,
-                  itemBuilder: (context, index) {
-                    final group = groups[index];
-                    return FutureBuilder<Volunteer?>(
-                      future: _getElderForGroup(context, group),
-                      builder: (context, elderSnapshot) {
-                        if (elderSnapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const ListTile(
-                            title: CircularProgressIndicator(),
-                          );
-                        }
-                        return GroupCard(
-                          group: group,
-                          isArchived: false,
-                          elder: elderSnapshot.data,
-                        );
-                      },
+            child: ListView.builder(
+              itemCount: groups.length,
+              itemBuilder: (context, index) {
+                final group = groups[index];
+                return FutureBuilder<Volunteer?>(
+                  future: _getElderForGroup(context, group),
+                  builder: (context, elderSnapshot) {
+                    if (elderSnapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return const Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    return GroupCard(
+                      group: group,
+                      isArchived: false,
+                      elder: elderSnapshot.data,
                     );
                   },
-                ),
-              );
-            },
-          ),
-        );
-      },
+                );
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 }
