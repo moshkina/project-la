@@ -117,7 +117,7 @@ class _ActiveGroupsScreenState extends State<ActiveGroupsScreen> {
               child: Text(
                 _searchQuery.isEmpty
                     ? 'Нет активных групп'
-                    : 'Группы не найдены',
+                    : 'Группа не найдены',
                 style: const TextStyle(color: Colors.white),
               ),
             );
