@@ -78,16 +78,22 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
     return null;
   }
 
-  Future<void> sendVolunteersToInfo(String message) async {
+  Future<bool> sendVolunteersToInfo(String message) async {
     try {
       final directory = await getTemporaryDirectory();
       final file = File('${directory.path}/отчёт_по_волонтёрам.txt');
-      await file.writeAsString(message);
-      await Share.shareXFiles(
-        [XFile(file.path)],
+      await file.writeAsString(message, encoding: utf8);
+
+      final ShareResult result = await Share.shareXFiles(
+        [XFile(file.path, mimeType: 'text/plain')],
       );
+
+      debugPrint('Результат шеринга: ${result.status}');
+
+      return result.status == ShareResultStatus.success;
     } catch (e) {
       debugPrint('Ошибка при отправке: $e');
+      return false;
     }
   }
 
@@ -308,13 +314,12 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
                 ),
               ),
             ),
-            // НОВАЯ СТРОКА: Сохранить и переслать
             ListTile(
               leading: const Icon(Icons.save, color: Colors.white),
               title: const Text('Сохранить и переслать',
                   style: TextStyle(color: Colors.white)),
               onTap: () {
-                Navigator.pop(context); // Закрыть drawer
+                Navigator.pop(context);
                 _saveAndShareData();
               },
             ),
@@ -366,6 +371,7 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
                 label: 'Отправить новые инфоргу',
                 backgroundColor: const Color(0xFFF96800),
                 onTap: () async {
+                  final viewModel = context.read<VolunteersViewModel>();
                   final volunteers =
                       viewModel.volunteers.where((v) => !v.isSent).toList();
                   if (volunteers.isEmpty) {
@@ -375,9 +381,21 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
                     );
                     return;
                   }
-                  await sendVolunteersToInfo(await viewModel
-                      .formatVolunteersWithGroupNames(volunteers));
-                  await viewModel.markAllUnsentAsSent();
+
+                  final message = await viewModel
+                      .formatVolunteersWithGroupNames(volunteers);
+
+                  final bool wasShared = await sendVolunteersToInfo(message);
+
+                  if (wasShared && mounted) {
+                    await viewModel.markAllUnsentAsSent();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Успешно отправлено'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
                 },
               ),
             ],
