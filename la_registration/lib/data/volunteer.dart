@@ -14,6 +14,7 @@ class Volunteer {
   final String region;
   final String phoneNumber;
   final String car;
+  final String additionalInfo;
   final bool isSent;
   String status;
   final String notifyThatLeft;
@@ -29,6 +30,7 @@ class Volunteer {
     this.region = "",
     required this.phoneNumber,
     this.car = "",
+    this.additionalInfo = "",
     this.isSent = false,
     this.status = "Active",
     this.notifyThatLeft = "false",
@@ -50,6 +52,7 @@ class Volunteer {
       'region': region,
       'phoneNumber': phoneNumber,
       'car': car,
+      'additionalInfo': additionalInfo,
       'isSent': isSent,
       'status': status,
       'notifyThatLeft': notifyThatLeft,
@@ -67,6 +70,7 @@ class Volunteer {
     String? region,
     String? phoneNumber,
     String? car,
+    String? additionalInfo,
     bool? isSent,
     String? status,
     String? notifyThatLeft,
@@ -82,6 +86,7 @@ class Volunteer {
       region: region ?? this.region,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       car: car ?? this.car,
+      additionalInfo: additionalInfo ?? this.additionalInfo,
       isSent: isSent ?? this.isSent,
       status: status ?? this.status,
       notifyThatLeft: notifyThatLeft ?? this.notifyThatLeft,
@@ -100,6 +105,7 @@ class Volunteer {
       region: json['region'] as String? ?? '',
       phoneNumber: json['phoneNumber'] as String,
       car: json['car'] as String? ?? '',
+      additionalInfo: json['additionalInfo'] as String? ?? '',
       isSent: json['isSent'] as bool? ?? false,
       status: json['status'] as String? ?? 'Active',
       notifyThatLeft: json['notifyThatLeft'] as String? ?? 'false',

@@ -100,7 +100,7 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `groups` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `numberOfGroup` INTEGER NOT NULL, `elderOfGroupId` INTEGER NOT NULL, `navigators` TEXT NOT NULL, `cars` TEXT NOT NULL, `dateOfCreation` TEXT NOT NULL, `groupCallsign` INTEGER NOT NULL, `archived` TEXT NOT NULL, `task` TEXT, `radios` TEXT, `compasses` TEXT, `flashlights` TEXT, `otherEquipment` TEXT, `notes` TEXT, FOREIGN KEY (`elderOfGroupId`) REFERENCES `volunteers` (`uniqueId`) ON UPDATE NO ACTION ON DELETE CASCADE)');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `volunteers` (`uniqueId` INTEGER PRIMARY KEY AUTOINCREMENT, `_index` INTEGER NOT NULL, `fullName` TEXT NOT NULL, `callSign` TEXT NOT NULL, `nickName` TEXT NOT NULL, `region` TEXT NOT NULL, `phoneNumber` TEXT NOT NULL, `car` TEXT NOT NULL, `isSent` INTEGER NOT NULL, `status` TEXT NOT NULL, `notifyThatLeft` TEXT NOT NULL, `timeForSearch` TEXT NOT NULL, `groupId` INTEGER)');
+            'CREATE TABLE IF NOT EXISTS `volunteers` (`uniqueId` INTEGER PRIMARY KEY AUTOINCREMENT, `_index` INTEGER NOT NULL, `fullName` TEXT NOT NULL, `callSign` TEXT NOT NULL, `nickName` TEXT NOT NULL, `region` TEXT NOT NULL, `phoneNumber` TEXT NOT NULL, `car` TEXT NOT NULL, `additionalInfo` TEXT NOT NULL, `isSent` INTEGER NOT NULL, `status` TEXT NOT NULL, `notifyThatLeft` TEXT NOT NULL, `timeForSearch` TEXT NOT NULL, `groupId` INTEGER)');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -335,6 +335,7 @@ class _$VolunteersDao extends VolunteersDao {
                   'region': item.region,
                   'phoneNumber': item.phoneNumber,
                   'car': item.car,
+                  'additionalInfo': item.additionalInfo,
                   'isSent': item.isSent ? 1 : 0,
                   'status': item.status,
                   'notifyThatLeft': item.notifyThatLeft,
@@ -354,6 +355,7 @@ class _$VolunteersDao extends VolunteersDao {
                   'region': item.region,
                   'phoneNumber': item.phoneNumber,
                   'car': item.car,
+                  'additionalInfo': item.additionalInfo,
                   'isSent': item.isSent ? 1 : 0,
                   'status': item.status,
                   'notifyThatLeft': item.notifyThatLeft,
@@ -373,6 +375,7 @@ class _$VolunteersDao extends VolunteersDao {
                   'region': item.region,
                   'phoneNumber': item.phoneNumber,
                   'car': item.car,
+                  'additionalInfo': item.additionalInfo,
                   'isSent': item.isSent ? 1 : 0,
                   'status': item.status,
                   'notifyThatLeft': item.notifyThatLeft,
@@ -405,6 +408,7 @@ class _$VolunteersDao extends VolunteersDao {
             region: row['region'] as String,
             phoneNumber: row['phoneNumber'] as String,
             car: row['car'] as String,
+            additionalInfo: row['additionalInfo'] as String,
             isSent: (row['isSent'] as int) != 0,
             status: row['status'] as String,
             notifyThatLeft: row['notifyThatLeft'] as String,
@@ -425,6 +429,7 @@ class _$VolunteersDao extends VolunteersDao {
             region: row['region'] as String,
             phoneNumber: row['phoneNumber'] as String,
             car: row['car'] as String,
+            additionalInfo: row['additionalInfo'] as String,
             isSent: (row['isSent'] as int) != 0,
             status: row['status'] as String,
             notifyThatLeft: row['notifyThatLeft'] as String,
@@ -445,6 +450,7 @@ class _$VolunteersDao extends VolunteersDao {
             region: row['region'] as String,
             phoneNumber: row['phoneNumber'] as String,
             car: row['car'] as String,
+            additionalInfo: row['additionalInfo'] as String,
             isSent: (row['isSent'] as int) != 0,
             status: row['status'] as String,
             notifyThatLeft: row['notifyThatLeft'] as String,
@@ -465,6 +471,7 @@ class _$VolunteersDao extends VolunteersDao {
             region: row['region'] as String,
             phoneNumber: row['phoneNumber'] as String,
             car: row['car'] as String,
+            additionalInfo: row['additionalInfo'] as String,
             isSent: (row['isSent'] as int) != 0,
             status: row['status'] as String,
             notifyThatLeft: row['notifyThatLeft'] as String,
@@ -486,6 +493,7 @@ class _$VolunteersDao extends VolunteersDao {
             region: row['region'] as String,
             phoneNumber: row['phoneNumber'] as String,
             car: row['car'] as String,
+            additionalInfo: row['additionalInfo'] as String,
             isSent: (row['isSent'] as int) != 0,
             status: row['status'] as String,
             notifyThatLeft: row['notifyThatLeft'] as String,
@@ -511,6 +519,7 @@ class _$VolunteersDao extends VolunteersDao {
             region: row['region'] as String,
             phoneNumber: row['phoneNumber'] as String,
             car: row['car'] as String,
+            additionalInfo: row['additionalInfo'] as String,
             isSent: (row['isSent'] as int) != 0,
             status: row['status'] as String,
             notifyThatLeft: row['notifyThatLeft'] as String,
@@ -532,6 +541,7 @@ class _$VolunteersDao extends VolunteersDao {
             region: row['region'] as String,
             phoneNumber: row['phoneNumber'] as String,
             car: row['car'] as String,
+            additionalInfo: row['additionalInfo'] as String,
             isSent: (row['isSent'] as int) != 0,
             status: row['status'] as String,
             notifyThatLeft: row['notifyThatLeft'] as String,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:la_registration/data/volunteer.dart';
-import 'package:la_registration/data/volunteers_dao.dart';
 import 'package:provider/provider.dart';
 import 'package:la_registration/viewmodels/groups_and_volunteers_viewmodel.dart';
 
@@ -23,6 +22,7 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
   late TextEditingController regionController;
   late TextEditingController phoneNumberController;
   late TextEditingController carController;
+  late TextEditingController additionalInfoController;
   late Volunteer volunteer;
   bool isEdited = false;
   bool _isNameDuplicate = false;
@@ -40,6 +40,7 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
     regionController = TextEditingController();
     phoneNumberController = TextEditingController();
     carController = TextEditingController();
+    additionalInfoController = TextEditingController();
 
     fullNameController.addListener(_checkForDuplicate);
     phoneNumberController.addListener(_checkForDuplicate);
@@ -54,6 +55,7 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
           regionController.text = volunteer.region;
           phoneNumberController.text = volunteer.phoneNumber;
           carController.text = volunteer.car;
+          additionalInfoController.text = volunteer.additionalInfo;
           isEdited = true;
         });
       });
@@ -70,6 +72,7 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
     regionController.dispose();
     phoneNumberController.dispose();
     carController.dispose();
+    additionalInfoController.dispose();
     super.dispose();
   }
 
@@ -88,14 +91,12 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
 
     final volunteers = await _viewModel.getAllVolunteers();
 
-    // Совпадения по имени
     final nameMatches = name.isNotEmpty
         ? volunteers
             .where((v) => v.fullName.toLowerCase() == name.toLowerCase())
             .toList()
         : [];
 
-    // Совпадения по телефону
     final phoneMatches = phone.isNotEmpty
         ? volunteers.where((v) => v.phoneNumber == phone).toList()
         : [];
@@ -105,7 +106,6 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
       _isPhoneDuplicate = phoneMatches.isNotEmpty;
 
       if (_isNameDuplicate && _isPhoneDuplicate) {
-        // Проверяем, совпадает ли и имя, и телефон у одного и того же волонтёра
         final samePerson = volunteers.any((v) =>
             v.fullName.toLowerCase() == name.toLowerCase() &&
             v.phoneNumber == phone);
@@ -113,7 +113,6 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
         if (samePerson) {
           _duplicateMessage = 'Этот человек вероятно уже внесён';
         } else {
-          // разные люди
           _duplicateMessage =
               'Имя совпадает с одним человеком, телефон — с другим';
         }
@@ -127,13 +126,14 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
     });
   }
 
-  void _saveData() {
+  void _saveData() async {
     String fullName = fullNameController.text.trim();
     String callSign = callSignController.text.trim();
     String nickName = forumNicknameController.text.trim();
     String region = regionController.text.trim();
     String phoneNumber = phoneNumberController.text.trim();
     String car = carController.text.trim();
+    String additionalInfo = additionalInfoController.text.trim();
 
     if (fullName.isEmpty || phoneNumber.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -141,55 +141,43 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
       return;
     }
 
-    // // ⚡ Больше не блокируем сохранение, просто предупреждаем
-    // if ((_isNameDuplicate || _isPhoneDuplicate) && !isEdited) {
-    //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-    //     content: Text("⚠ $_duplicateMessage\nВсё равно сохраняем."),
-    //     duration: const Duration(seconds: 3),
-    //   ));
-    // }
-
-    if (isEdited) {
-      print('[DEBUG] Обновление волонтера ID: ${volunteer.uniqueId}');
-      volunteer = Volunteer(
-          uniqueId: volunteer.uniqueId,
-          index: volunteer.index,
-          fullName: fullName,
-          phoneNumber: phoneNumber,
-          callSign: callSign,
-          nickName: nickName,
-          region: region,
-          car: car,
-          status: volunteer.status,
-          notifyThatLeft: volunteer.notifyThatLeft,
-          timeForSearch: volunteer.timeForSearch,
-          groupId: volunteer.groupId);
-      _viewModel.updateVolunteer(volunteer).then((_) {
-        print('[DEBUG] Волонтер успешно обновлен');
+    try {
+      if (isEdited) {
+        volunteer = Volunteer(
+            uniqueId: volunteer.uniqueId,
+            index: volunteer.index,
+            fullName: fullName,
+            phoneNumber: phoneNumber,
+            callSign: callSign,
+            nickName: nickName,
+            region: region,
+            car: car,
+            additionalInfo: additionalInfo,
+            status: volunteer.status,
+            notifyThatLeft: volunteer.notifyThatLeft,
+            timeForSearch: volunteer.timeForSearch,
+            groupId: volunteer.groupId);
+        await _viewModel.updateVolunteer(volunteer);
         Navigator.pop(context);
-      }).catchError((e) {
-        print('[ERROR] Ошибка обновления: $e');
-      });
-    } else {
-      print('[DEBUG] Создание нового волонтера');
-      Volunteer newVolunteer = Volunteer(
-          index: 0,
-          fullName: fullName,
-          phoneNumber: phoneNumber,
-          callSign: callSign,
-          nickName: nickName,
-          region: region,
-          car: car,
-          status: "Активный",
-          notifyThatLeft: "false",
-          timeForSearch: "",
-          groupId: null);
-      _viewModel.insertVolunteer(newVolunteer).then((_) {
-        print('[DEBUG] Новый волонтер успешно сохранен');
+      } else {
+        Volunteer newVolunteer = Volunteer(
+            index: 0,
+            fullName: fullName,
+            phoneNumber: phoneNumber,
+            callSign: callSign,
+            nickName: nickName,
+            region: region,
+            car: car,
+            additionalInfo: additionalInfo,
+            status: "Активный",
+            notifyThatLeft: "false",
+            timeForSearch: "",
+            groupId: null);
+        await _viewModel.insertVolunteer(newVolunteer);
         Navigator.pop(context);
-      }).catchError((e) {
-        print('[ERROR] Ошибка сохранения: $e');
-      });
+      }
+    } catch (e) {
+      print('Ошибка сохранения: $e');
     }
   }
 
@@ -211,9 +199,9 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
             TextField(
               controller: fullNameController,
               decoration: const InputDecoration(
-                labelText: "Полное имя*",
+                labelText: "ФИО*",
                 labelStyle: TextStyle(color: Colors.white),
-                hintText: "Введите полное имя",
+                hintText: "Введите ФИО",
                 hintStyle: TextStyle(color: Colors.grey),
                 focusedBorder: UnderlineInputBorder(
                   borderSide: BorderSide(color: Colors.white),
@@ -257,7 +245,6 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
                   style: const TextStyle(color: Colors.orange),
                 ),
               ),
-            // Остальные поля остаются без изменений
             TextField(
               controller: callSignController,
               decoration: const InputDecoration(
@@ -309,7 +296,7 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
             TextField(
               controller: carController,
               decoration: const InputDecoration(
-                labelText: "Машина",
+                labelText: "Авто (гос.номер)",
                 labelStyle: TextStyle(color: Colors.white),
                 hintText: "Введите гос.номер",
                 hintStyle: TextStyle(color: Colors.grey),
@@ -321,6 +308,23 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
                 ),
               ),
               style: const TextStyle(color: Colors.white),
+            ),
+            TextField(
+              controller: additionalInfoController,
+              decoration: const InputDecoration(
+                labelText: "Дополнительно",
+                labelStyle: TextStyle(color: Colors.white),
+                hintText: "Навыки, ограничения по времени, особенности...",
+                hintStyle: TextStyle(color: Colors.grey),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              style: const TextStyle(color: Colors.white),
+              maxLines: 2,
             ),
             const SizedBox(height: 20),
             ElevatedButton(

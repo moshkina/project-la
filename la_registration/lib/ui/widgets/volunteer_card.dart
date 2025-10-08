@@ -81,16 +81,32 @@ class VolunteerCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text('ФИО: ${volunteer.fullName}',
                 style: const TextStyle(color: Colors.white)),
-            Text('Позывной: ${volunteer.callSign}',
-                style: const TextStyle(color: Colors.white)),
-            Text('Ник на форуме: ${volunteer.nickName}',
-                style: const TextStyle(color: Colors.white)),
-            Text('Регион: ${volunteer.region}',
-                style: const TextStyle(color: Colors.white)),
+            if (volunteer.callSign.isNotEmpty)
+              Text('Позывной: ${volunteer.callSign}',
+                  style: const TextStyle(color: Colors.white)),
+            if (volunteer.nickName.isNotEmpty)
+              Text('Ник на форуме: ${volunteer.nickName}',
+                  style: const TextStyle(color: Colors.white)),
+            if (volunteer.region.isNotEmpty)
+              Text('Регион: ${volunteer.region}',
+                  style: const TextStyle(color: Colors.white)),
             Text('Телефон: ${volunteer.phoneNumber}',
                 style: const TextStyle(color: Colors.white)),
-            Text('Авто: ${volunteer.car}',
-                style: const TextStyle(color: Colors.white)),
+            if (volunteer.car.isNotEmpty)
+              Text('Авто: ${volunteer.car}',
+                  style: const TextStyle(color: Colors.white)),
+            if (volunteer.additionalInfo.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  const Text('Дополнительно:',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
+                  Text(volunteer.additionalInfo,
+                      style: const TextStyle(color: Colors.white70)),
+                ],
+              ),
             if (groupName != null)
               Text('Группа: $groupName',
                   style: const TextStyle(color: Colors.white)),
