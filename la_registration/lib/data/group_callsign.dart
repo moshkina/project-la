@@ -1,36 +1,33 @@
 enum GroupCallsigns {
-  bort("Борт"),
-  kinolog("Кинолог"),
+  autonome("Автоном"),
+  lisa("Лиса"),
   veter("Ветер"),
-  voda("Вода"),
-  pegas("Пегас"),
+  kinolog("Кинолог"),
+  bort("Борт"),
+  pso("ПСО"),
   police("Полиция"),
   mchs("МЧС"),
-  pso("ПСО"),
-  lisa("Лиса"),
-  autonome("Автоном");
+  pegas("Пегас"),
+  voda("Вода");
 
   final String nameOfGroup;
 
   const GroupCallsigns(this.nameOfGroup);
 
-  /// Метод для получения элемента перечисления по строковому значению
-static GroupCallsigns? fromString(String name) {
-  final lower = name.toLowerCase();
-  try {
-    return GroupCallsigns.values.firstWhere(
-      (e) =>
-          e.name.toLowerCase() == lower ||
-          e.nameOfGroup.toLowerCase() == lower,
-    );
-  } catch (_) {
-    return null;
+  static GroupCallsigns? fromString(String name) {
+    final lower = name.toLowerCase();
+    try {
+      return GroupCallsigns.values.firstWhere(
+        (e) =>
+            e.name.toLowerCase() == lower ||
+            e.nameOfGroup.toLowerCase() == lower,
+      );
+    } catch (_) {
+      return null;
+    }
   }
-}
 
-
-  // Метод для получения строки с названием группы
   String getGroupCallsignAsString() {
-    return nameOfGroup; // Возвращаем название группы
+    return nameOfGroup;
   }
 }
