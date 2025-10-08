@@ -106,9 +106,13 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
       final volunteers = await volunteersViewModel.getAllVolunteers();
       final groups = groupsViewModel.groups;
 
+      final archivedGroups = groups.where((g) => g.archived == "true").toList();
+      final archivedGroupsVolunteers =
+          _getArchivedGroupsVolunteers(volunteers, archivedGroups);
       final data = {
-        'volunteers': volunteers.map((v) => v.toJson()).toList(),
+        'volunteers': volunteers.map((v) => _volunteerToJson(v)).toList(),
         'groups': groups.map((g) => _groupToJson(g)).toList(),
+        'archived_groups_volunteers': archivedGroupsVolunteers,
       };
 
       final jsonString = jsonEncode(data);
@@ -135,22 +139,60 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
     }
   }
 
+  List<Map<String, dynamic>> _getArchivedGroupsVolunteers(
+      List<Volunteer> volunteers, List<Group> archivedGroups) {
+    final List<Map<String, dynamic>> result = [];
+
+    for (final group in archivedGroups) {
+      final groupVolunteers =
+          volunteers.where((v) => v.groupId == group.id).toList();
+
+      for (final volunteer in groupVolunteers) {
+        result.add({
+          'archivedGroupId': group.id.toString(),
+          'archivedVolunteerId': volunteer.uniqueId.toString(),
+        });
+      }
+    }
+
+    return result;
+  }
+
+  Map<String, dynamic> _volunteerToJson(Volunteer volunteer) {
+    return {
+      'uniqueId': volunteer.uniqueId.toString(),
+      '_index': volunteer.index.toString(),
+      'fullName': volunteer.fullName,
+      'callSign': volunteer.callSign,
+      'nickName': volunteer.nickName,
+      'region': volunteer.region,
+      'phoneNumber': volunteer.phoneNumber,
+      'car': volunteer.car,
+      'additionalInfo': volunteer.additionalInfo,
+      'isSent': volunteer.isSent.toString(),
+      'status': volunteer.status,
+      'notifyThatLeft': volunteer.notifyThatLeft,
+      'timeForSearch': volunteer.timeForSearch,
+      'groupId': volunteer.groupId?.toString() ?? '',
+    };
+  }
+
   Map<String, dynamic> _groupToJson(Group group) {
     return {
       'id': group.id?.toString() ?? '',
       'numberOfGroup': group.numberOfGroup.toString(),
       'elderOfGroupId': group.elderOfGroupId.toString(),
       'navigators': group.navigators,
-      'cars': group.cars,
+      'walkieTalkies': group.radios ?? '',
+      'compasses': group.compasses ?? '',
+      'lamps': group.flashlights ?? '',
+      'others': group.otherEquipment ?? '',
+      'task': group.task ?? '',
+      'leavingTime': '',
+      'returnTime': '',
       'dateOfCreation': group.dateOfCreation,
       'groupCallsign': group.groupCallsign.name,
       'archived': group.archived,
-      'task': group.task ?? '',
-      'radios': group.radios ?? '',
-      'compasses': group.compasses ?? '',
-      'flashlights': group.flashlights ?? '',
-      'otherEquipment': group.otherEquipment ?? '',
-      'notes': group.notes ?? '',
     };
   }
 
