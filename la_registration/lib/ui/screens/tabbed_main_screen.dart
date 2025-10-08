@@ -332,73 +332,80 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
   // ----- Вкладки -----
   Widget _buildNewVolunteersTab() {
     final viewModel = context.read<VolunteersViewModel>();
-    return Stack(
+    return Column(
       children: [
-        _buildVolunteersList('Новые'),
-        Positioned(
-          bottom: 16,
-          right: 16,
-          child: SpeedDial(
-            icon: Icons.add,
-            activeIcon: Icons.close,
-            backgroundColor: const Color(0xFFF96800),
-            children: [
-              SpeedDialChild(
-                child: const Icon(Icons.edit, color: Colors.white),
-                label: 'Добавить вручную',
-                backgroundColor: const Color(0xFFF96800),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        const AddManuallyScreen(volunteerId: 0, size: '5'),
+        Expanded(
+          child: _buildVolunteersList('Новые'),
+        ),
+        Container(
+          height: 80,
+          padding: const EdgeInsets.all(16),
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: SpeedDial(
+              icon: Icons.add,
+              activeIcon: Icons.close,
+              backgroundColor: const Color(0xFFF96800),
+              iconTheme: const IconThemeData(color: Colors.black),
+              children: [
+                SpeedDialChild(
+                  child: const Icon(Icons.edit, color: Colors.white),
+                  label: 'Добавить вручную',
+                  backgroundColor: const Color(0xFFF96800),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          const AddManuallyScreen(volunteerId: 0, size: '5'),
+                    ),
                   ),
                 ),
-              ),
-              SpeedDialChild(
-                child: const Icon(Icons.qr_code_scanner, color: Colors.white),
-                label: 'Добавить с помощью QRScanner',
-                backgroundColor: const Color(0xFFF96800),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const BarCodeScannerScreen(),
+                SpeedDialChild(
+                  child: const Icon(Icons.qr_code_scanner, color: Colors.white),
+                  label: 'Добавить с помощью QRScanner',
+                  backgroundColor: const Color(0xFFF96800),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const BarCodeScannerScreen(),
+                    ),
                   ),
                 ),
-              ),
-              SpeedDialChild(
-                child: const Icon(Icons.send, color: Colors.white),
-                label: 'Отправить новые инфоргу',
-                backgroundColor: const Color(0xFFF96800),
-                onTap: () async {
-                  final viewModel = context.read<VolunteersViewModel>();
-                  final volunteers =
-                      viewModel.volunteers.where((v) => !v.isSent).toList();
-                  if (volunteers.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Нет новых волонтёров для отправки.')),
-                    );
-                    return;
-                  }
+                SpeedDialChild(
+                  child: const Icon(Icons.send, color: Colors.white),
+                  label: 'Отправить новые инфоргу',
+                  backgroundColor: const Color(0xFFF96800),
+                  onTap: () async {
+                    final viewModel = context.read<VolunteersViewModel>();
+                    final volunteers =
+                        viewModel.volunteers.where((v) => !v.isSent).toList();
+                    if (volunteers.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content:
+                                Text('Нет новых волонтёров для отправки.')),
+                      );
+                      return;
+                    }
 
-                  final message = await viewModel
-                      .formatVolunteersWithGroupNames(volunteers);
+                    final message = await viewModel
+                        .formatVolunteersWithGroupNames(volunteers);
 
-                  final bool wasShared = await sendVolunteersToInfo(message);
+                    final bool wasShared = await sendVolunteersToInfo(message);
 
-                  if (wasShared && mounted) {
-                    await viewModel.markAllUnsentAsSent();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Успешно отправлено'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  }
-                },
-              ),
-            ],
+                    if (wasShared && mounted) {
+                      await viewModel.markAllUnsentAsSent();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Успешно отправлено'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -407,30 +414,37 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
 
   Widget _buildSentVolunteersTab() {
     final viewModel = context.read<VolunteersViewModel>();
-    return Stack(
+    return Column(
       children: [
-        _buildVolunteersList('Отправленные'),
-        Positioned(
-          bottom: 16,
-          right: 16,
-          child: FloatingActionButton.extended(
-            onPressed: () async {
-              final volunteers = viewModel.volunteers
-                  .where((v) => v.status == "Уехал")
-                  .toList();
-              if (volunteers.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Нет уехавших волонтёров для отправки.')),
-                );
-                return;
-              }
-              await sendVolunteersToInfo(
-                  await viewModel.formatVolunteersWithGroupNames(volunteers));
-            },
-            backgroundColor: const Color(0xFFF96800),
-            icon: const Icon(Icons.send),
-            label: const Text('Отправить инфоргу тех кто уехал'),
+        Expanded(
+          child: _buildVolunteersList('Отправленные'),
+        ),
+        Container(
+          height: 80,
+          padding: const EdgeInsets.all(16),
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: FloatingActionButton.extended(
+              onPressed: () async {
+                final volunteers = viewModel.volunteers
+                    .where((v) => v.status == "Уехал")
+                    .toList();
+                if (volunteers.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Нет уехавших волонтёров для отправки.')),
+                  );
+                  return;
+                }
+                await sendVolunteersToInfo(
+                    await viewModel.formatVolunteersWithGroupNames(volunteers));
+              },
+              backgroundColor: const Color(0xFFF96800),
+              icon: const Icon(Icons.send,
+                  color: Colors.black), // ← ДОБАВЬТЕ color: Colors.black
+              label: const Text('Отправить инфоргу тех кто уехал',
+                  style: TextStyle(color: Colors.black)), // ← ДОБАВЬТЕ style
+            ),
           ),
         ),
       ],
@@ -438,16 +452,21 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
   }
 
   Widget _buildAllVolunteersTab() {
-    return Stack(
+    return Column(
       children: [
-        _buildVolunteersList('Все'),
-        Positioned(
-          bottom: 16,
-          right: 16,
-          child: FloatingActionButton(
-            onPressed: _showDeleteConfirmationDialog,
-            backgroundColor: const Color(0xFFF96800),
-            child: const Icon(Icons.delete),
+        Expanded(
+          child: _buildVolunteersList('Все'),
+        ),
+        Container(
+          height: 80,
+          padding: const EdgeInsets.all(16),
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: FloatingActionButton(
+              onPressed: _showDeleteConfirmationDialog,
+              backgroundColor: const Color(0xFFF96800),
+              child: const Icon(Icons.delete, color: Colors.black),
+            ),
           ),
         ),
       ],
@@ -478,11 +497,18 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
               volunteer: volunteer,
               groupName: volunteer.groupId?.toString(),
               onEdit: () {
+                if (volunteer.uniqueId == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Ошибка: ID волонтера не найден')),
+                  );
+                  return;
+                }
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => AddManuallyScreen(
-                      volunteerId: volunteer.index,
+                      volunteerId: volunteer.uniqueId!,
                       size: '5',
                     ),
                   ),

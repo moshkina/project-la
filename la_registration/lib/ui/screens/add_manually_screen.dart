@@ -46,9 +46,17 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
     phoneNumberController.addListener(_checkForDuplicate);
 
     if (widget.volunteerId != 0) {
-      _viewModel.getVolunteerById(widget.volunteerId).then((vol) {
+      _loadVolunteerData();
+    }
+  }
+
+  Future<void> _loadVolunteerData() async {
+    try {
+      final volunteerData =
+          await _viewModel.getVolunteerById(widget.volunteerId);
+      if (volunteerData != null && mounted) {
         setState(() {
-          volunteer = vol!;
+          volunteer = volunteerData;
           fullNameController.text = volunteer.fullName;
           callSignController.text = volunteer.callSign;
           forumNicknameController.text = volunteer.nickName;
@@ -58,7 +66,9 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
           additionalInfoController.text = volunteer.additionalInfo;
           isEdited = true;
         });
-      });
+      }
+    } catch (e) {
+      print('Ошибка загрузки данных волонтера: $e');
     }
   }
 
@@ -185,160 +195,171 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Добавить вручную',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          isEdited ? 'Редактировать волонтёра' : 'Добавить вручную',
+          style: const TextStyle(color: Colors.white),
         ),
         backgroundColor: const Color(0xFFF96800),
       ),
       backgroundColor: Colors.black,
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: fullNameController,
-              decoration: const InputDecoration(
-                labelText: "ФИО*",
-                labelStyle: TextStyle(color: Colors.white),
-                hintText: "Введите ФИО",
-                hintStyle: TextStyle(color: Colors.grey),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                TextField(
+                  controller: fullNameController,
+                  decoration: const InputDecoration(
+                    labelText: "ФИО*",
+                    labelStyle: TextStyle(color: Colors.white),
+                    hintText: "Введите ФИО",
+                    hintStyle: TextStyle(color: Colors.grey),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  style: const TextStyle(color: Colors.white),
                 ),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
+                if (_isNameDuplicate && fullNameController.text.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Text(
+                      _duplicateMessage,
+                      style: const TextStyle(color: Colors.orange),
+                    ),
+                  ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: phoneNumberController,
+                  decoration: const InputDecoration(
+                    labelText: "Телефон*",
+                    labelStyle: TextStyle(color: Colors.white),
+                    hintText: "Введите номер телефона",
+                    hintStyle: TextStyle(color: Colors.grey),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  style: const TextStyle(color: Colors.white),
+                  keyboardType: TextInputType.phone,
                 ),
-              ),
-              style: const TextStyle(color: Colors.white),
+                if (_isPhoneDuplicate && phoneNumberController.text.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Text(
+                      _duplicateMessage,
+                      style: const TextStyle(color: Colors.orange),
+                    ),
+                  ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: callSignController,
+                  decoration: const InputDecoration(
+                    labelText: "Позывной",
+                    labelStyle: TextStyle(color: Colors.white),
+                    hintText: "Введите позывной",
+                    hintStyle: TextStyle(color: Colors.grey),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  style: const TextStyle(color: Colors.white),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: forumNicknameController,
+                  decoration: const InputDecoration(
+                    labelText: "Ник на форуме",
+                    labelStyle: TextStyle(color: Colors.white),
+                    hintText: "Введите ник на форуме",
+                    hintStyle: TextStyle(color: Colors.grey),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  style: const TextStyle(color: Colors.white),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: regionController,
+                  decoration: const InputDecoration(
+                    labelText: "Регион",
+                    labelStyle: TextStyle(color: Colors.white),
+                    hintText: "Введите регион",
+                    hintStyle: TextStyle(color: Colors.grey),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  style: const TextStyle(color: Colors.white),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: carController,
+                  decoration: const InputDecoration(
+                    labelText: "Авто (гос.номер)",
+                    labelStyle: TextStyle(color: Colors.white),
+                    hintText: "Введите гос.номер",
+                    hintStyle: TextStyle(color: Colors.grey),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  style: const TextStyle(color: Colors.white),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: additionalInfoController,
+                  decoration: const InputDecoration(
+                    labelText: "Дополнительно",
+                    labelStyle: TextStyle(color: Colors.white),
+                    hintText: "Навыки, ограничения по времени, особенности...",
+                    hintStyle: TextStyle(color: Colors.grey),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  style: const TextStyle(color: Colors.white),
+                  maxLines: 2,
+                ),
+                const SizedBox(height: 30),
+                ElevatedButton(
+                  onPressed: _saveData,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF96800),
+                    minimumSize: const Size(double.infinity, 50),
+                  ),
+                  child: Text(
+                    isEdited ? 'Сохранить изменения' : 'Сохранить',
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
             ),
-            if (_isNameDuplicate && fullNameController.text.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 4.0),
-                child: Text(
-                  _duplicateMessage,
-                  style: const TextStyle(color: Colors.orange),
-                ),
-              ),
-            TextField(
-              controller: phoneNumberController,
-              decoration: const InputDecoration(
-                labelText: "Телефон*",
-                labelStyle: TextStyle(color: Colors.white),
-                hintText: "Введите номер телефона",
-                hintStyle: TextStyle(color: Colors.grey),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-              ),
-              style: const TextStyle(color: Colors.white),
-              keyboardType: TextInputType.phone,
-            ),
-            if (_isPhoneDuplicate && phoneNumberController.text.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 4.0),
-                child: Text(
-                  _duplicateMessage,
-                  style: const TextStyle(color: Colors.orange),
-                ),
-              ),
-            TextField(
-              controller: callSignController,
-              decoration: const InputDecoration(
-                labelText: "Позывной",
-                labelStyle: TextStyle(color: Colors.white),
-                hintText: "Введите позывной",
-                hintStyle: TextStyle(color: Colors.grey),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-              ),
-              style: const TextStyle(color: Colors.white),
-            ),
-            TextField(
-              controller: forumNicknameController,
-              decoration: const InputDecoration(
-                labelText: "Ник на форуме",
-                labelStyle: TextStyle(color: Colors.white),
-                hintText: "Введите ник на форуме",
-                hintStyle: TextStyle(color: Colors.grey),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-              ),
-              style: const TextStyle(color: Colors.white),
-            ),
-            TextField(
-              controller: regionController,
-              decoration: const InputDecoration(
-                labelText: "Регион",
-                labelStyle: TextStyle(color: Colors.white),
-                hintText: "Введите регион",
-                hintStyle: TextStyle(color: Colors.grey),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-              ),
-              style: const TextStyle(color: Colors.white),
-            ),
-            TextField(
-              controller: carController,
-              decoration: const InputDecoration(
-                labelText: "Авто (гос.номер)",
-                labelStyle: TextStyle(color: Colors.white),
-                hintText: "Введите гос.номер",
-                hintStyle: TextStyle(color: Colors.grey),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-              ),
-              style: const TextStyle(color: Colors.white),
-            ),
-            TextField(
-              controller: additionalInfoController,
-              decoration: const InputDecoration(
-                labelText: "Дополнительно",
-                labelStyle: TextStyle(color: Colors.white),
-                hintText: "Навыки, ограничения по времени, особенности...",
-                hintStyle: TextStyle(color: Colors.grey),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-              ),
-              style: const TextStyle(color: Colors.white),
-              maxLines: 2,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _saveData,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF96800),
-                minimumSize: const Size(double.infinity, 50),
-              ),
-              child: Text(
-                isEdited ? 'Сохранить изменения' : 'Сохранить',
-                style: const TextStyle(color: Colors.white, fontSize: 16),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
