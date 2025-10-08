@@ -207,6 +207,42 @@ class VolunteersViewModel extends ChangeNotifier {
 ''').join('\n====================\n');
   }
 
+  Future<String> formatVolunteersWithGroupNames(
+      List<Volunteer> volunteers) async {
+    final formatted = <String>[];
+
+    for (final v in volunteers) {
+      final groupName = await getGroupNameForVolunteer(v.groupId);
+      formatted.add('''
+ФИО: ${v.fullName}
+Позывной: ${v.callSign}
+Ник: ${v.nickName}
+Регион: ${v.region}
+Телефон: ${v.phoneNumber}
+Авто: ${v.car}
+Группа: ${groupName ?? '-'}
+Статус: ${v.status}
+Время: ${v.timeForSearch ?? ''}
+''');
+    }
+
+    return formatted.join('\n====================\n');
+  }
+
+  Future<String?> getGroupNameForVolunteer(int? groupId) async {
+    if (groupId == null) return null;
+
+    try {
+      final group = await _groupsDao.getGroupById(groupId);
+      if (group == null) return 'Группа удалена';
+
+      return group.getGroupDisplayName();
+    } catch (e) {
+      debugPrint('Ошибка при получении названия группы: $e');
+      return 'Ошибка загрузки';
+    }
+  }
+
   Future<List<Volunteer>> getAllVolunteers() =>
       _volunteersDao.getAllVolunteers();
 

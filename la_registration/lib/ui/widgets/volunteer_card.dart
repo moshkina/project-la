@@ -107,9 +107,26 @@ class VolunteerCard extends StatelessWidget {
                       style: const TextStyle(color: Colors.white70)),
                 ],
               ),
-            if (groupName != null)
-              Text('Группа: $groupName',
-                  style: const TextStyle(color: Colors.white)),
+            if (volunteer.groupId != null)
+              FutureBuilder<String?>(
+                future: context
+                    .read<VolunteersViewModel>()
+                    .getGroupNameForVolunteer(volunteer.groupId),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Text('Группа: загрузка...',
+                        style: TextStyle(color: Colors.white60));
+                  }
+
+                  final groupName = snapshot.data;
+                  if (groupName != null) {
+                    return Text('Группа: $groupName',
+                        style: const TextStyle(color: Colors.white));
+                  }
+
+                  return const SizedBox.shrink();
+                },
+              ),
             Align(
               alignment: Alignment.bottomRight,
               child: IconButton(

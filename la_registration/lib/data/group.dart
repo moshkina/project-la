@@ -1,9 +1,8 @@
-import 'package:floor/floor.dart'; // Оставляем только нужные импорты
-import '../data/group_callsign.dart'; // Убедитесь, что путь импорта правильный
-import '../converters/converter.dart'; // Импортируем конвертер
-import 'volunteer.dart'; // Импортируем модель волонтера
+import 'package:floor/floor.dart';
+import '../data/group_callsign.dart';
+import '../converters/converter.dart';
+import 'volunteer.dart';
 
-// part 'group.g.dart'; // Директива для сгенерированного кода
 @Entity(
   tableName: 'groups',
   foreignKeys: [
@@ -31,7 +30,7 @@ class Group {
   final String? compasses;
   final String? flashlights;
   final String? otherEquipment;
-  final String? notes; // Добавляем поле для заметок
+  final String? notes;
 
   Group({
     this.id,
@@ -47,39 +46,46 @@ class Group {
     this.compasses = '',
     this.flashlights = '',
     this.otherEquipment = '',
-    this.notes = '', // Инициализируем по умолчанию
+    this.notes = '',
   });
-Group copyWith({
-  int? id,
-  int? numberOfGroup,
-  int? elderOfGroupId,
-  String? navigators,
-  String? cars,
-  String? dateOfCreation,
-  GroupCallsigns? groupCallsign,
-  String? archived,
-  String? task,
-  String? radios,
-  String? compasses,
-  String? flashlights,
-  String? otherEquipment,
-  String? notes, // Добавляем notes
-}) {
-  return Group(
-    id: id ?? this.id,
-    numberOfGroup: numberOfGroup ?? this.numberOfGroup,
-    elderOfGroupId: elderOfGroupId ?? this.elderOfGroupId,
-    navigators: navigators ?? this.navigators,
-    cars: cars ?? this.cars,
-    dateOfCreation: dateOfCreation ?? this.dateOfCreation,
-    groupCallsign: groupCallsign ?? this.groupCallsign,
-    archived: archived ?? this.archived,
-    task: task ?? this.task,
-    radios: radios ?? this.radios,
-    compasses: compasses ?? this.compasses,
-    flashlights: flashlights ?? this.flashlights,
-    otherEquipment: otherEquipment ?? this.otherEquipment,
-    notes: notes ?? this.notes, // Добавляем notes
-  );
-}
+  String getGroupDisplayName() {
+    final callsign = groupCallsign.getGroupCallsignAsString();
+    final number = numberOfGroup;
+    final status = archived == 'true' ? ' (архив)' : '';
+    return '$callsign №$number$status';
+  }
+
+  Group copyWith({
+    int? id,
+    int? numberOfGroup,
+    int? elderOfGroupId,
+    String? navigators,
+    String? cars,
+    String? dateOfCreation,
+    GroupCallsigns? groupCallsign,
+    String? archived,
+    String? task,
+    String? radios,
+    String? compasses,
+    String? flashlights,
+    String? otherEquipment,
+    String? notes,
+  }) {
+    return Group(
+      id: id ?? this.id,
+      numberOfGroup: numberOfGroup ?? this.numberOfGroup,
+      elderOfGroupId: elderOfGroupId ?? this.elderOfGroupId,
+      navigators: navigators ?? this.navigators,
+      cars: cars ?? this.cars,
+      dateOfCreation: dateOfCreation ?? this.dateOfCreation,
+      groupCallsign: groupCallsign ?? this.groupCallsign,
+      archived: archived ?? this.archived,
+      task: task ?? this.task,
+      radios: radios ?? this.radios,
+      compasses: compasses ?? this.compasses,
+      flashlights: flashlights ?? this.flashlights,
+      otherEquipment: otherEquipment ?? this.otherEquipment,
+      notes: notes ?? this.notes,
+    );
+  }
 }
