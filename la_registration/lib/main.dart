@@ -19,7 +19,8 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => CounterViewModel()),
-        ChangeNotifierProvider(create: (_) => GroupsViewModel(groupsDao)),
+        ChangeNotifierProvider(
+            create: (_) => GroupsViewModel(groupsDao, volunteersDao)),
         ChangeNotifierProvider(
             create: (_) => VolunteersViewModel(volunteersDao, groupsDao)),
       ],

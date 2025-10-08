@@ -7,11 +7,12 @@ import '../data/group_callsign.dart';
 
 class GroupsViewModel extends ChangeNotifier {
   final GroupsDao _groupsDao;
+  final VolunteersDao _volunteersDao;
   List<Group> _groups = [];
 
   List<Group> get groups => _groups;
 
-  GroupsViewModel(this._groupsDao) {
+  GroupsViewModel(this._groupsDao, this._volunteersDao) {
     _loadAllGroups();
   }
 
@@ -85,7 +86,54 @@ class GroupsViewModel extends ChangeNotifier {
     return id;
   }
 
+  Future<void> archiveGroupAndFreeVolunteers(Group group) async {
+    try {
+      final volunteers = await _volunteersDao.getVolunteersByGroupId(group.id!);
+      for (final volunteer in volunteers) {
+        final updatedVolunteer = volunteer.copyWith(groupId: null);
+        await _volunteersDao.updateVolunteer(updatedVolunteer);
+      }
+      final archivedGroup = group.copyWith(archived: 'true');
+      await _groupsDao.updateGroup(archivedGroup);
+
+      await _loadAllGroups();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Ошибка при архивировании группы: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteGroupAndFreeVolunteers(Group group) async {
+    try {
+      final volunteers = await _volunteersDao.getVolunteersByGroupId(group.id!);
+      for (final volunteer in volunteers) {
+        final updatedVolunteer = volunteer.copyWith(groupId: null);
+        await _volunteersDao.updateVolunteer(updatedVolunteer);
+      }
+
+      await _groupsDao.deleteGroup(group);
+
+      await _loadAllGroups();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Ошибка при удалении группы: $e');
+      rethrow;
+    }
+  }
+
   Future<void> deleteArchivedGroups() async {
+    final archivedGroups =
+        _groups.where((group) => group.archived == 'true').toList();
+
+    for (final group in archivedGroups) {
+      final volunteers = await _volunteersDao.getVolunteersByGroupId(group.id!);
+      for (final volunteer in volunteers) {
+        final updatedVolunteer = volunteer.copyWith(groupId: null);
+        await _volunteersDao.updateVolunteer(updatedVolunteer);
+      }
+    }
+
     await _groupsDao.deleteArchivedGroups();
     await _loadAllGroups();
   }
@@ -224,6 +272,36 @@ class VolunteersViewModel extends ChangeNotifier {
     if (volunteer != null) {
       volunteer.status = "Active";
       await updateVolunteer(volunteer);
+    }
+  }
+
+  Future<void> fixOrphanedVolunteers() async {
+    try {
+      final allVolunteers = await _volunteersDao.getAllVolunteers();
+      final allGroups = await _groupsDao.getAllGroups();
+
+      final existingGroupIds = allGroups
+          .map((g) => g.id)
+          .where((id) => id != null)
+          .cast<int>()
+          .toSet();
+
+      int fixedCount = 0;
+      for (final volunteer in allVolunteers) {
+        if (volunteer.groupId != null &&
+            !existingGroupIds.contains(volunteer.groupId)) {
+          final fixedVolunteer = volunteer.copyWith(groupId: null);
+          await _volunteersDao.updateVolunteer(fixedVolunteer);
+          fixedCount++;
+          debugPrint(
+              'Исправлен волонтер: ${volunteer.fullName} (groupId: ${volunteer.groupId})');
+        }
+      }
+
+      await loadVolunteers();
+      debugPrint('Исправлено волонтеров: $fixedCount');
+    } catch (e) {
+      debugPrint('Ошибка при исправлении волонтеров: $e');
     }
   }
 
