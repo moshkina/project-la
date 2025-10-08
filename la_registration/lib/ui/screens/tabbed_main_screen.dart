@@ -9,9 +9,11 @@ import 'package:la_registration/ui/screens/group_tabs_screen.dart';
 import 'package:la_registration/ui/screens/barcode_scanner_screen.dart';
 import 'package:la_registration/ui/screens/add_manually_screen.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:la_registration/data/group.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
+import 'dart:convert';
 import 'dart:async';
 
 class TabbedMainScreen extends StatefulWidget {
@@ -79,15 +81,70 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
   Future<void> sendVolunteersToInfo(String message) async {
     try {
       final directory = await getTemporaryDirectory();
-      final file = File('${directory.path}/volunteers_report.txt');
+      final file = File('${directory.path}/отчёт_по_волонтёрам.txt');
       await file.writeAsString(message);
       await Share.shareXFiles(
         [XFile(file.path)],
-        text: 'Отчёт по волонтёрам',
       );
     } catch (e) {
       debugPrint('Ошибка при отправке: $e');
     }
+  }
+
+  Future<void> _saveAndShareData() async {
+    try {
+      final volunteersViewModel = context.read<VolunteersViewModel>();
+      final groupsViewModel = context.read<GroupsViewModel>();
+
+      final volunteers = await volunteersViewModel.getAllVolunteers();
+      final groups = await groupsViewModel.groups;
+
+      final data = {
+        'volunteers': volunteers.map((v) => v.toJson()).toList(),
+        'groups': groups.map((g) => _groupToJson(g)).toList(),
+      };
+
+      final jsonString = jsonEncode(data);
+
+      final fileName = _searchName != null && _searchName!.isNotEmpty
+          ? '${_searchName!.replaceAll(RegExp(r'[^a-zA-Z0-9а-яА-Я]'), '_')}.json'
+          : 'резервная_копия_данных.json';
+
+      final directory = await getTemporaryDirectory();
+      final file = File('${directory.path}/$fileName');
+      await file.writeAsString(jsonString);
+
+      await Share.shareXFiles([XFile(file.path)]);
+    } catch (e) {
+      debugPrint('Ошибка при сохранении и отправке данных: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Map<String, dynamic> _groupToJson(Group group) {
+    return {
+      'id': group.id?.toString() ?? '',
+      'numberOfGroup': group.numberOfGroup.toString(),
+      'elderOfGroupId': group.elderOfGroupId.toString(),
+      'navigators': group.navigators,
+      'cars': group.cars,
+      'dateOfCreation': group.dateOfCreation,
+      'groupCallsign': group.groupCallsign.name,
+      'archived': group.archived,
+      'task': group.task ?? '',
+      'radios': group.radios ?? '',
+      'compasses': group.compasses ?? '',
+      'flashlights': group.flashlights ?? '',
+      'otherEquipment': group.otherEquipment ?? '',
+      'notes': group.notes ?? '',
+    };
   }
 
   void _onSearchChanged(String value) {
@@ -251,6 +308,16 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
                 ),
               ),
             ),
+            // НОВАЯ СТРОКА: Сохранить и переслать
+            ListTile(
+              leading: const Icon(Icons.save, color: Colors.white),
+              title: const Text('Сохранить и переслать',
+                  style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context); // Закрыть drawer
+                _saveAndShareData();
+              },
+            ),
           ],
         ),
       ),
@@ -308,8 +375,8 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
                     );
                     return;
                   }
-                  await sendVolunteersToInfo(
-                      viewModel.formatVolunteers(volunteers));
+                  await sendVolunteersToInfo(await viewModel
+                      .formatVolunteersWithGroupNames(volunteers));
                   await viewModel.markAllUnsentAsSent();
                 },
               ),
@@ -341,7 +408,7 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
                 return;
               }
               await sendVolunteersToInfo(
-                  viewModel.formatVolunteers(volunteers));
+                  await viewModel.formatVolunteersWithGroupNames(volunteers));
             },
             backgroundColor: const Color(0xFFF96800),
             icon: const Icon(Icons.send),
