@@ -4,7 +4,6 @@ import 'package:la_registration/data/group.dart';
 import 'package:la_registration/data/volunteer.dart';
 import 'package:la_registration/viewmodels/groups_and_volunteers_viewmodel.dart';
 import 'package:la_registration/data/group_callsign.dart';
-import 'package:la_registration/data/groups_dao.dart';
 
 class AddNewGroupScreen extends StatefulWidget {
   final GroupCallsigns groupCallsign;
@@ -27,7 +26,7 @@ class AddNewGroupScreenState extends State<AddNewGroupScreen> {
   late TextEditingController searcherController;
   List<Volunteer> searchersList = [];
   Volunteer? elder;
-  Map<int, GroupInfo> _volunteerGroupInfoCache = {};
+  Map<int, GroupInfo> volunteerGroupInfoCache = {};
   List<Volunteer> _allActiveVolunteers = [];
 
   @override
@@ -53,16 +52,16 @@ class AddNewGroupScreenState extends State<AddNewGroupScreen> {
 
     for (final volunteer in activeVolunteers) {
       if (volunteer.groupId != null &&
-          !_volunteerGroupInfoCache.containsKey(volunteer.groupId)) {
+          !volunteerGroupInfoCache.containsKey(volunteer.groupId)) {
         final group = await groupsViewModel.getGroupById(volunteer.groupId!);
         if (group == null) {
-          _volunteerGroupInfoCache[volunteer.groupId!] =
+          volunteerGroupInfoCache[volunteer.groupId!] =
               GroupInfo(type: GroupType.deleted, group: null);
         } else if (group.archived == 'true') {
-          _volunteerGroupInfoCache[volunteer.groupId!] =
+          volunteerGroupInfoCache[volunteer.groupId!] =
               GroupInfo(type: GroupType.archived, group: group);
         } else {
-          _volunteerGroupInfoCache[volunteer.groupId!] =
+          volunteerGroupInfoCache[volunteer.groupId!] =
               GroupInfo(type: GroupType.active, group: group);
         }
       }
@@ -89,9 +88,11 @@ class AddNewGroupScreenState extends State<AddNewGroupScreen> {
           elderController.text = elderVol?.fullName ?? '';
         });
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Группа не найдена")),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Группа не найдена")),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -107,7 +108,7 @@ class AddNewGroupScreenState extends State<AddNewGroupScreen> {
       return GroupInfo(type: GroupType.none, group: null);
     }
 
-    return _volunteerGroupInfoCache[volunteer.groupId!] ??
+    return volunteerGroupInfoCache[volunteer.groupId!] ??
         GroupInfo(type: GroupType.deleted, group: null);
   }
 
@@ -205,14 +206,14 @@ class AddNewGroupScreenState extends State<AddNewGroupScreen> {
       if (mounted) {
         Navigator.pop(context);
       }
-    } catch (e, stackTrace) {
-      print('Ошибка при сохранении группы: $e');
-      print('StackTrace: $stackTrace');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Ошибка: $e"),
-        ),
-      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Ошибка: $e"),
+          ),
+        );
+      }
     }
   }
 

@@ -203,7 +203,7 @@ class VolunteersViewModel extends ChangeNotifier {
 Авто: ${v.car}
 Группа: ${v.groupId ?? '-'}
 Статус: ${v.status}
-Время: ${v.timeForSearch ?? ''}
+Время: ${v.timeForSearch}
 ''').join('\n====================\n');
   }
 
@@ -222,7 +222,7 @@ class VolunteersViewModel extends ChangeNotifier {
 Авто: ${v.car}
 Группа: ${groupName ?? '-'}
 Статус: ${v.status}
-Время: ${v.timeForSearch ?? ''}
+Время: ${v.timeForSearch}
 ''');
     }
 

@@ -9,10 +9,10 @@ class GroupTabsScreen extends StatefulWidget {
   const GroupTabsScreen({super.key, required this.groupCallsign});
 
   @override
-  _GroupTabsScreenState createState() => _GroupTabsScreenState();
+  GroupTabsScreenState createState() => GroupTabsScreenState();
 }
 
-class _GroupTabsScreenState extends State<GroupTabsScreen> {
+class GroupTabsScreenState extends State<GroupTabsScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearchActive = false;
   String _searchQuery = '';

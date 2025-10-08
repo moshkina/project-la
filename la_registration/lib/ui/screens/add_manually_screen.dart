@@ -68,7 +68,7 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
         });
       }
     } catch (e) {
-      print('Ошибка загрузки данных волонтера: $e');
+      debugPrint('Ошибка загрузки данных волонтёра: $e');
     }
   }
 
@@ -187,7 +187,7 @@ class AddManuallyScreenState extends State<AddManuallyScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
-      print('Ошибка сохранения: $e');
+      debugPrint('Ошибка сохранения: $e');
     }
   }
 

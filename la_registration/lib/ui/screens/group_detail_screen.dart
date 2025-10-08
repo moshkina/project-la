@@ -96,13 +96,11 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
       if (!mounted) return;
 
       Volunteer? elder;
-      if (_currentGroup != null && _currentGroup!.elderOfGroupId != null) {
-        elder = volunteers
-            .where((v) => v.uniqueId == _currentGroup!.elderOfGroupId)
-            .toList()
-            .cast<Volunteer?>()
-            .firstOrNull;
-      }
+      elder = volunteers
+          .where((v) => v.uniqueId == _currentGroup!.elderOfGroupId)
+          .toList()
+          .cast<Volunteer?>()
+          .firstOrNull;
 
       setState(() {
         _volunteers = volunteers;

@@ -80,7 +80,7 @@ class BarCodeScannerScreenState extends State<BarCodeScannerScreen> {
       String nickName = scanResultArray[2];
       String region = scanResultArray[3];
       String phoneNumber = scanResultArray[4];
-      String car = scanResultArray[5] ?? "";
+      String car = scanResultArray[5];
 
       final volunteer = Volunteer(
         uniqueId: DateTime.now().millisecondsSinceEpoch,

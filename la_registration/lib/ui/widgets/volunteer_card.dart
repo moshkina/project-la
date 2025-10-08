@@ -13,7 +13,7 @@ class VolunteerCard extends StatelessWidget {
   final bool isInGroupContext;
 
   const VolunteerCard({
-    Key? key,
+    super.key,
     required this.volunteer,
     this.onEdit,
     this.onChangeStatus,
@@ -21,7 +21,7 @@ class VolunteerCard extends StatelessWidget {
     this.onRemoveFromGroup,
     this.groupName,
     this.isInGroupContext = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

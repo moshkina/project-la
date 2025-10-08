@@ -66,13 +66,14 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
     await prefs.setString('search_name', name);
   }
 
-  Future<String?> _pickTime(BuildContext context, String initialTime) async {
+  Future<String?> _pickTime(String initialTime) async {
     TimeOfDay initial = TimeOfDay.now();
     final picked = await showTimePicker(
       context: context,
       initialTime: initial,
     );
     if (picked != null) {
+      if (!mounted) return null;
       return picked.format(context);
     }
     return null;
@@ -103,7 +104,7 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
       final groupsViewModel = context.read<GroupsViewModel>();
 
       final volunteers = await volunteersViewModel.getAllVolunteers();
-      final groups = await groupsViewModel.groups;
+      final groups = groupsViewModel.groups;
 
       final data = {
         'volunteers': volunteers.map((v) => v.toJson()).toList(),
@@ -329,9 +330,7 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
     );
   }
 
-  // ----- Вкладки -----
   Widget _buildNewVolunteersTab() {
-    final viewModel = context.read<VolunteersViewModel>();
     return Column(
       children: [
         Expanded(
@@ -530,8 +529,7 @@ class TabbedMainScreenState extends State<TabbedMainScreen>
                 }
               },
               onChangeTime: () async {
-                final newTime =
-                    await _pickTime(context, volunteer.timeForSearch);
+                final newTime = await _pickTime(volunteer.timeForSearch);
                 if (newTime != null) {
                   await viewModel.updateVolunteer(
                       volunteer.copyWith(timeForSearch: newTime));

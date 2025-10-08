@@ -568,4 +568,4 @@ class _$VolunteersDao extends VolunteersDao {
 }
 
 // ignore_for_file: unused_element
-final _converter = Converter();
+const _converter = Converter();

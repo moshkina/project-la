@@ -40,5 +40,7 @@ Future<void> _addAdditionalInfoField(AppDatabase database) async {
       await database.database.execute(
           'ALTER TABLE volunteers ADD COLUMN additionalInfo TEXT NOT NULL DEFAULT ""');
     }
-  } catch (e) {}
+  } catch (e) {
+    debugPrint('Ошибка при добавлении поля additionalInfo: $e');
+  }
 }
